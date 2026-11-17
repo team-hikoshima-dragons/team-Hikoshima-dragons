@@ -21,5 +21,6 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('', include('kataruAI.urls')),
     path('plays/', include('plays.urls')), 
 ]

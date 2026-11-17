@@ -1,0 +1,94 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>カタルAI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Zen+Maru+Gothic:wght@500;900&display=swap">
+  <link rel="stylesheet" href="{% static "css/common.css" %}">
+  <link rel="stylesheet" href="{% static "css/pages/top.css" %}">
+</head>
+<body>
+<!-- 画面ID: Top-NoLogin -->
+<div class="page">
+
+  <!-- No.14 未ログイン用ヘッダー -->
+  <header class="header">
+    <a href="top_nologin.html" class="logo">カタル<span>AI</span></a><!-- No.1 イベント1 -->
+    <div class="header__right">
+      <!-- No.2 遊び方（イベント5：後回し） -->
+      <a href="#" class="header__link">遊び方</a>
+      <!-- No.5 ログイン（イベント8） -->
+      <a href="login.html" class="btn btn--s">ログイン</a>
+    </div>
+  </header>
+
+  <main class="main main--center">
+    <div class="container">
+      <section class="hero">
+        <div class="hero__copy">
+          <h1 class="hero__title">AIのキャラを、<br>ことばで説得しよう。</h1><!-- No.6 -->
+          <p class="hero__lead">毎回ちがうキャラクターと会話して、ゴールを目指す対話ゲーム。<br>ゲストならすぐに遊べます。</p><!-- No.7 -->
+          <div class="hero__actions">
+            <button type="button" id="start-btn" class="btn btn--primary">ゲストで遊ぶ</button><!-- No.8 イベント9 -->
+            <a href="signup.html" class="btn">新規登録</a><!-- No.9 イベント10 -->
+          </div>
+          <p class="hero__note">※ゲストのプレイ結果はランキング・履歴に保存されません</p><!-- No.10 -->
+          <!-- No.11 今日のカラー（用途・仕様が未定義） -->
+          <p class="today-color"><span class="today-color__dot" aria-hidden="true"></span>今日のカラー：空色</p>
+        </div>
+
+        <!-- No.12 カタルン -->
+        <div class="mascot">
+          <p class="mascot__bubble">ぼくを説得できるかな？</p>
+          <img src="{% static 'img/katarun.svg' %}" alt="カタルン" width="300" height="280">
+        </div>
+      </section>
+
+      <!-- No.13 3段階説明 -->
+      <ol class="steps">
+        <li class="step">
+          <span class="step__num">1</span>
+          <div><p class="step__title">お題が出る</p><p class="step__text">キャラ・目的・制約が毎回変わる</p></div>
+        </li>
+        <li class="step">
+          <span class="step__num">2</span>
+          <div><p class="step__title">会話で説得</p><p class="step__text">自由に入力してキャラと話す</p></div>
+        </li>
+        <li class="step">
+          <span class="step__num">3</span>
+          <div><p class="step__title">反応を読んでクリア</p><p class="step__text">機嫌や疑いは見えない数値</p></div>
+        </li>
+      </ol>
+    </div>
+  </main>
+</div>
+
+<!-- No.15 お題生成中表示（Figma「ゲーム開始(お題生成中)」） -->
+<div class="overlay" id="overlay-generating" data-static hidden>
+  <div class="modal" role="status" aria-live="polite">
+    <div class="spinner" aria-hidden="true"></div>
+    <p class="modal__title">お題を作っています…（数秒〜十数秒）</p>
+  </div>
+</div>
+
+<!-- No.16・17 生成エラー（Figma「ゲーム開始(通信エラー)」） -->
+<div class="overlay" id="overlay-gen-error" hidden>
+  <div class="modal" role="alertdialog" aria-labelledby="gen-error-title">
+    <button type="button" class="modal__close" data-close aria-label="閉じる">×</button>
+    <p class="modal__title" id="gen-error-title">通信エラーが発生しました</p><!-- No.16 -->
+    <p class="modal__text">お題を作れませんでした。もう一度ためしてね。</p>
+    <div class="modal__actions">
+      <button type="button" class="btn" data-close>キャンセル</button>
+      <button type="button" class="btn btn--primary" id="retry-btn">再試行</button><!-- No.17 イベント9 -->
+    </div>
+  </div>
+</div>
+
+<script src="{% static "js/common.js" %}"></script>
+<script src="{% static "js/top.js" %}"></script>
+</body>
+</html>

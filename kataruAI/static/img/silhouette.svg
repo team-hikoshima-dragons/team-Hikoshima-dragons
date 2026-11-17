@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150 150" role="img" aria-label="標準シルエット">
+  <rect width="150" height="150" fill="#eceef5"/>
+  <circle cx="75" cy="60" r="28" fill="#c9cbdb"/>
+  <path d="M25 150q0-50 50-50t50 50z" fill="#c9cbdb"/>
+</svg>

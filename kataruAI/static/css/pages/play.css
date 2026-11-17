@@ -1,0 +1,81 @@
+/* プレイ画面・プレイ履歴詳細（会話の吹き出しを共有） */
+
+/* ---------- 会話の吹き出し ---------- */
+.talk { display: flex; flex-direction: column; gap: 14px; }
+.talk__row { display: flex; gap: 12px; align-items: flex-end; }
+.talk__row--user { justify-content: flex-end; }
+.talk__icon { width: 44px; height: 44px; border-radius: 12px; border: 2px solid var(--ink); overflow: hidden; flex-shrink: 0; }
+.talk__bubble {
+  max-width: 62%; padding: 12px 18px; border-radius: 18px; border: 2px solid var(--ink);
+  background: var(--surface); white-space: pre-wrap; word-break: break-word;
+}
+.talk__row--opp .talk__bubble { border-bottom-left-radius: 4px; }
+.talk__row--user .talk__bubble { background: var(--main); border-bottom-right-radius: 4px; }
+.talk__typing { color: var(--text-sub); font-size: 14px; padding: 8px 14px; background: var(--gray-bg); border-radius: 999px; align-self: flex-start; }
+.talk__typing::after { content: ""; animation: dots 1.2s steps(4) infinite; }
+@keyframes dots { 0% { content: ""; } 25% { content: "."; } 50% { content: ".."; } 75% { content: "..."; } }
+.talk__notice { align-self: center; font-size: 13px; font-weight: 700; color: var(--danger); background: var(--danger-bg); padding: 6px 14px; border-radius: 999px; }
+
+/* ---------- プレイ画面 ---------- */
+.play-page { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+.play-header { height: 74px; background: var(--surface); border-bottom: 1px solid var(--line-soft); display: flex; align-items: center; gap: 16px; padding: 0 32px; flex-shrink: 0; }
+.play-header__theme { flex: 1; display: flex; align-items: center; gap: 10px; min-width: 0; background: var(--bg); border-radius: var(--radius); padding: 8px 14px; }
+.play-header__theme p { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tag-ink { font-size: 12px; font-weight: 900; padding: 2px 10px; border-radius: 999px; background: var(--ink); color: var(--surface); flex-shrink: 0; }
+.turns { display: flex; align-items: baseline; gap: 4px; border: 2px solid var(--ink); border-radius: var(--radius); padding: 2px 14px; font-size: 13px; font-weight: 700; white-space: nowrap; }
+.turns__num { font-family: var(--font-head); font-size: 28px; font-weight: 900; }
+.turns.is-low { background: var(--danger-bg); }
+
+.play-main { flex: 1; display: grid; grid-template-columns: 360px 1fr; min-height: 0; }
+
+/* 左：キャラクター情報 */
+.opp { background: var(--surface); border-right: 1px solid var(--line-soft); padding: 24px 22px; display: flex; flex-direction: column; gap: 16px; overflow-y: auto; }
+.opp__profile { text-align: center; }
+.opp__face { width: 150px; height: 150px; margin: 0 auto 12px; border-radius: 28px; border: 3px solid var(--ink); overflow: hidden; transition: border-color .3s, box-shadow .3s; }
+/* ユーザー作成シナリオは画像1枚のまま、様子を枠の色で表す */
+.opp__face[data-mood="happy"] { border-color: var(--success); box-shadow: 0 0 0 4px var(--success-bg); }
+.opp__face[data-mood="angry"] { border-color: var(--danger); box-shadow: 0 0 0 4px var(--danger-bg); }
+.opp__face[data-mood="doubt"] { border-color: #e0a800; box-shadow: 0 0 0 4px var(--lv-intermediate); }
+.opp__name { font-family: var(--font-head); font-weight: 900; font-size: 22px; }
+.opp__desc { color: var(--text-sub); font-size: 13px; margin-top: 4px; }
+.mood { border: 2px solid var(--ink); border-radius: var(--radius); padding: 10px 14px; }
+.mood__label { font-size: 12px; color: var(--text-sub); font-weight: 700; }
+.mood__text { font-weight: 900; font-size: 18px; }
+.goal { display: flex; flex-direction: column; gap: 10px; font-size: 14px; }
+.goal__item { display: flex; gap: 10px; align-items: baseline; }
+.opp__note { margin-top: auto; font-size: 12px; color: var(--text-sub); background: var(--bg); border-radius: var(--radius-s); padding: 10px 12px; }
+
+/* 右：会話 */
+.conv { display: flex; flex-direction: column; min-height: 0; }
+.conv__log { flex: 1; overflow-y: auto; padding: 24px 32px; }
+.composer-box { border-top: 1px solid var(--line-soft); background: var(--surface); padding: 16px 32px 14px; }
+.composer-box__row { display: flex; gap: 14px; align-items: stretch; }
+.composer-box textarea { flex: 1; min-height: 72px; height: 72px; resize: none; }
+.composer-box .btn { height: auto; }
+.composer-box__foot { display: flex; justify-content: space-between; margin-top: 6px; font-size: 12px; color: var(--text-sub); }
+.composer-box__error { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.composer-box__goal { display: flex; align-items: center; justify-content: center; gap: 16px; padding: 8px 0; font-weight: 900; }
+
+/* ---------- プレイ履歴詳細 ---------- */
+.hd { display: grid; grid-template-columns: 1fr 340px; gap: 24px; align-items: start; }
+.hd__summary { display: flex; gap: 20px; align-items: center; }
+.hd__title { font-family: var(--font-head); font-weight: 900; font-size: 24px; margin: 6px 0; }
+.hd__meta { display: flex; gap: 16px; color: var(--text-sub); font-size: 14px; flex-wrap: wrap; }
+.hd__log { margin-top: 20px; }
+.hd__log .talk__bubble { max-width: 72%; }
+.hd__panel h2 { font-size: 17px; font-weight: 900; margin-bottom: 14px; }
+.timeline { counter-reset: none; display: flex; flex-direction: column; gap: 8px; }
+.timeline li { display: flex; gap: 12px; align-items: center; font-size: 14px; padding: 8px 12px; border-radius: var(--radius-s); background: var(--bg); }
+.timeline li span:first-child { font-weight: 700; color: var(--text-sub); width: 64px; flex-shrink: 0; }
+.timeline li.is-final { background: var(--success-bg); font-weight: 900; }
+.explain { margin-top: 16px; font-size: 14px; background: var(--lv-intermediate); border-radius: var(--radius-s); padding: 12px 14px; }
+.explain strong { display: block; margin-bottom: 2px; }
+.hd__panel .btn { margin-top: 20px; }
+
+@media (max-width: 960px) {
+  .play-page { height: auto; overflow: visible; }
+  .play-main { grid-template-columns: 1fr; }
+  .opp { border-right: 0; border-bottom: 1px solid var(--line-soft); }
+  .conv__log { min-height: 50vh; }
+  .hd { grid-template-columns: 1fr; }
+}

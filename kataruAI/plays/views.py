@@ -8,7 +8,7 @@ from django.views.decorators.http import require_POST
 from django.views.generic.base import TemplateView
 # from django.contrib.auth.mixins import LoginRequiredMixin
 
-class Index(TemplateView, LoginRequiredMixin):
+class Index(TemplateView):
     template_name = "index.html"  # frontend/dist/index.html(npm run build で生成)
 
 # Geminiが混雑(503)のときに試す最大回数

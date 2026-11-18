@@ -1,0 +1,62 @@
+/* マイページ・ゲーム設定・シナリオ作成 */
+
+/* ---------- マイページ ---------- */
+.profile { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
+.profile__name { font-family: var(--font-head); font-weight: 900; font-size: 28px; }
+.profile__since { color: var(--text-sub); font-size: 14px; }
+.profile__stats { display: flex; gap: 12px; margin-left: auto; }
+.profile__stat { text-align: center; background: var(--bg); border-radius: var(--radius); padding: 10px 20px; min-width: 110px; }
+.profile__stat span:first-child { display: block; font-size: 12px; color: var(--text-sub); font-weight: 700; }
+.profile__stat span:last-child { font-family: var(--font-head); font-weight: 900; font-size: 26px; }
+.profile__links { display: flex; gap: 12px; margin-top: 20px; }
+
+.section-title { font-size: 20px; font-weight: 900; margin: 36px 0 14px; }
+.form-card + .form-card { margin-top: 16px; }
+.form-card h3 { font-size: 16px; font-weight: 900; margin-bottom: 16px; display: flex; align-items: baseline; gap: 10px; }
+.form-card h3 small { font-size: 12px; color: var(--text-sub); font-weight: 700; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 20px; }
+.form-grid .field + .field { margin-top: 0; }
+.form-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px; }
+.form-actions .alert { margin-right: auto; align-self: center; }
+.danger-zone { border-color: var(--danger-bg); display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.danger-zone h3 { color: var(--danger); margin-bottom: 4px; }
+
+/* ---------- ゲーム設定 ---------- */
+.setting { display: flex; justify-content: space-between; align-items: center; gap: 24px; padding: 20px 0; }
+.setting + .setting { border-top: 1px solid var(--line-soft); }
+.setting__title { font-weight: 900; }
+.setting__note { font-size: 13px; color: var(--text-sub); }
+.sample { margin-top: 12px; display: flex; gap: 10px; align-items: center; }
+.sample__tag { font-size: 11px; font-weight: 900; padding: 1px 8px; border-radius: 999px; background: var(--gray-bg); color: var(--text-sub); }
+.sample__text { padding: 10px 16px; border: 2px solid var(--ink); border-radius: 16px; border-bottom-left-radius: 4px; background: var(--surface); min-height: 48px; min-width: 300px; }
+
+/* ---------- シナリオ作成 ---------- */
+.create { display: grid; grid-template-columns: 1fr 380px; gap: 24px; align-items: start; }
+.img-picker { display: flex; gap: 16px; align-items: center; }
+.img-picker img { width: 96px; height: 96px; border-radius: 20px; border: 2px solid var(--ink); object-fit: cover; }
+.img-picker input[type="file"] { font-size: 14px; }
+.hints { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.hint-chip { padding: 5px 12px; border-radius: 999px; border: 1.5px dashed var(--text-sub); font-size: 13px; font-weight: 700; color: var(--text-sub); background: var(--surface); }
+.hint-chip:hover { border-style: solid; color: var(--ink); border-color: var(--ink); }
+.create__submit { display: flex; align-items: center; justify-content: space-between; margin-top: 24px; gap: 12px; flex-wrap: wrap; }
+
+.preview { position: sticky; top: calc(var(--header-h) + 24px); }
+.preview h2 { font-size: 17px; font-weight: 900; margin-bottom: 12px; }
+.preview__card { text-align: center; }
+.preview__card img { width: 120px; height: 120px; border-radius: 24px; border: 2px solid var(--ink); margin: 0 auto 10px; object-fit: cover; }
+.preview__name { font-family: var(--font-head); font-weight: 900; font-size: 22px; }
+.preview__title { font-weight: 700; margin-top: 4px; }
+.preview__author { font-size: 13px; color: var(--text-sub); }
+.preview__intro { text-align: left; font-size: 14px; color: var(--text-sub); margin-top: 12px; }
+.preview .goal-box { text-align: left; }
+.preview__note { font-size: 12px; color: var(--text-sub); margin-top: 12px; }
+.placeholder-text { color: #a5a7bd; }
+.preview__loading { padding: 40px 0; text-align: center; color: var(--text-sub); font-weight: 700; }
+
+@media (max-width: 960px) {
+  .create { grid-template-columns: 1fr; }
+  .form-grid { grid-template-columns: 1fr; }
+  .profile__stats { margin-left: 0; }
+}
+.form-card__note { margin-top: 10px; }
+.danger-zone { margin-top: 36px; }

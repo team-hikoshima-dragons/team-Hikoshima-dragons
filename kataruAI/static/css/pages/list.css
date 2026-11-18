@@ -1,0 +1,58 @@
+/* 一覧系：プレイ履歴・シナリオ一覧・お気に入り一覧・作成したシナリオ一覧・ランキング */
+
+.toolbar { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+.search { flex: 1; min-width: 260px; position: relative; }
+.search .input { height: 58px; padding-left: 48px; }
+.search__icon { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: var(--text-sub); pointer-events: none; }
+.sortbar { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+.sortbar__label { font-weight: 700; color: var(--text-sub); font-size: 14px; }
+.sortbar .seg__btn { padding: 7px 16px; font-size: 14px; }
+.filterbar { margin-bottom: 20px; }
+
+/* プレイ履歴の行 */
+.history-row .row__body { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 12px; }
+.history-row__score { font-family: var(--font-head); font-weight: 900; font-size: 26px; text-align: right; min-width: 90px; }
+.history-row__score small { font-size: 14px; margin-left: 2px; }
+.history-row--playing { background: #fbfbfe; }
+.history-row--playing .history-row__score { color: var(--text-sub); }
+.resume-hint { font-size: 12px; font-weight: 700; color: var(--main-dark); }
+
+/* 作成したシナリオの行 */
+.code { font-family: ui-monospace, "SFMono-Regular", Menlo, monospace; font-weight: 700; letter-spacing: .06em; color: var(--ink); }
+
+/* ---------- シナリオ詳細オーバーレイ ---------- */
+.detail { display: grid; grid-template-columns: 150px 1fr; gap: 24px; }
+.detail__label { font-weight: 700; color: var(--text-sub); font-size: 14px; margin-bottom: 14px; }
+.detail__name { font-family: var(--font-head); font-weight: 900; font-size: 26px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.detail__desc { color: var(--text-sub); margin-top: 8px; }
+.detail__meta { display: flex; gap: 16px; font-size: 14px; color: var(--text-sub); margin-top: 10px; flex-wrap: wrap; }
+.detail__best { display: inline-block; margin-top: 12px; padding: 6px 14px; border-radius: var(--radius-s); background: var(--lv-intermediate); font-size: 14px; font-weight: 700; }
+.detail__actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; }
+
+/* コード検索の入力欄 */
+.code-input { text-align: center; font-family: ui-monospace, Menlo, monospace; font-size: 22px; letter-spacing: .2em; text-transform: uppercase; margin-top: 18px; }
+
+/* ---------- ランキング ---------- */
+.rank-filters { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+.rank-filters__row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.rank-filters__label { font-weight: 700; color: var(--text-sub); font-size: 14px; width: 56px; }
+.rank-table { width: 100%; border-collapse: separate; border-spacing: 0; background: var(--surface); border: 2px solid var(--line-soft); border-radius: var(--radius-l); overflow: hidden; }
+.rank-table th, .rank-table td { padding: 14px 20px; text-align: left; }
+.rank-table th { font-size: 13px; color: var(--text-sub); background: var(--bg); font-weight: 700; }
+.rank-table td { border-top: 1px solid var(--line-soft); }
+.rank-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+.rank-table__player { display: flex; align-items: center; gap: 10px; font-weight: 700; }
+.rank-table__me { background: #eef7ff; }
+.rank-table__gap td { text-align: center; color: var(--text-sub); padding: 6px; }
+.medal { display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; font-weight: 900; border: 2px solid var(--ink); }
+.medal--1 { background: #ffd447; }
+.medal--2 { background: #dfe3ee; }
+.medal--3 { background: #f1b98a; }
+.medal--n { border-color: transparent; }
+.you { font-size: 11px; font-weight: 900; background: var(--main); padding: 1px 8px; border-radius: 999px; border: 1.5px solid var(--ink); }
+.rank-empty td { text-align: center; color: var(--text-sub); padding: 64px 20px; }
+
+@media (max-width: 760px) {
+  .detail { grid-template-columns: 1fr; }
+  .history-row .row__body { grid-template-columns: 1fr; }
+}

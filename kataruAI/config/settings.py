@@ -67,7 +67,7 @@ ROOT_URLCONF = 'config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'frontend' / 'dist'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -132,9 +132,10 @@ USE_TZ = True
 
 import os
 STATIC_URL = 'static/'
-STATICFILES_DIRS = (
+STATICFILES_DIRS = [
+    BASE_DIR / 'frontend' / 'dist',
     os.path.join(BASE_DIR, 'static'),
-)
+]
 
 # Email
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
@@ -144,3 +145,7 @@ MAILERS = {
         'BACKEND': 'django.core.mail.backends.console.EmailBackend',
     },
 }
+
+# APIキーはコードに書かず、環境変数から読む(漏れ防止)
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
+GEMINI_MODEL = "gemini-3.5-flash-lite"

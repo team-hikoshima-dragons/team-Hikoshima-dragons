@@ -1,0 +1,79 @@
+/* トップ(未ログイン)・トップ(ログイン済み) */
+
+/* ---------- トップ(未ログイン) ---------- */
+.hero { display: flex; align-items: center; justify-content: space-between; gap: 60px; }
+.hero__copy { max-width: 760px; }
+.hero__title {
+  font-family: var(--font-head); font-weight: 900;
+  font-size: clamp(36px, 4.4vw, 64px); line-height: 1.45; letter-spacing: .02em;
+}
+.hero__lead { color: var(--text-sub); margin-top: 18px; font-size: 16px; }
+.hero__actions { display: flex; gap: 14px; margin-top: 22px; flex-wrap: wrap; }
+.hero__note { font-size: 12px; color: var(--text-sub); margin-top: 18px; }
+.today-color {
+  display: inline-flex; align-items: center; gap: 8px; margin-top: 16px;
+  padding: 6px 14px; border: 2px solid var(--line-soft); border-radius: 999px;
+  background: var(--surface); font-size: 12px; font-weight: 700;
+}
+.today-color__dot { width: 14px; height: 14px; border-radius: 50%; background: var(--main); border: 2px solid var(--ink); }
+
+.mascot { position: relative; width: 300px; flex-shrink: 0; padding-top: 56px; }
+.mascot__bubble {
+  position: absolute; top: 0; right: 0; background: var(--surface);
+  border: 2px solid var(--ink); border-radius: var(--radius); box-shadow: 3px 3px 0 var(--ink);
+  padding: 10px 18px; font-size: 14px; font-weight: 700; white-space: nowrap;
+}
+
+.steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 56px; }
+.step {
+  display: flex; align-items: center; gap: 14px; background: var(--surface);
+  border: 2px solid var(--line-soft); border-radius: var(--radius-l); padding: 18px 20px;
+}
+.step__num {
+  width: 40px; height: 40px; border-radius: var(--radius); display: grid; place-items: center;
+  font-weight: 900; flex-shrink: 0;
+}
+.step:nth-child(1) .step__num { background: var(--lv-beginner); }
+.step:nth-child(2) .step__num { background: var(--lv-intermediate); }
+.step:nth-child(3) .step__num { background: var(--success-bg); }
+.step__title { font-weight: 900; }
+.step__text { font-size: 12px; color: var(--text-sub); }
+
+/* ---------- トップ(ログイン済み) ---------- */
+.home { display: grid; grid-template-columns: 1fr 420px; gap: 24px; align-items: start; }
+.play-card { display: flex; gap: 24px; align-items: center; padding: 32px; }
+.play-card__mascot { width: 150px; flex-shrink: 0; }
+.play-card__hello { color: var(--text-sub); font-weight: 700; }
+.play-card__title { font-family: var(--font-head); font-weight: 900; font-size: 38px; margin-top: 8px; }
+.play-card .seg { margin-top: 16px; }
+.play-card .seg label { min-width: 86px; text-align: center; padding: 10px 18px; }
+.play-card__desc { color: var(--text-sub); font-size: 14px; margin: 14px 0 18px; min-height: 1.6em; }
+
+.menu { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.menu__item {
+  display: block; background: var(--surface); border: 2px solid var(--line-soft);
+  border-radius: var(--radius-l); padding: 20px; transition: border-color .12s, transform .12s;
+}
+.menu__item:hover { border-color: var(--ink); transform: translateY(-2px); }
+.menu__icon {
+  width: 40px; height: 40px; border-radius: var(--radius); display: grid; place-items: center;
+  font-size: 20px; border: 2px solid var(--ink); margin-bottom: 10px;
+}
+.menu__title { font-weight: 900; font-size: 16px; }
+.menu__text { font-size: 13px; color: var(--text-sub); }
+.menu__sub {
+  display: grid; place-items: center; height: 52px; font-weight: 700;
+  background: var(--surface); border: 2px solid var(--line-soft); border-radius: var(--radius);
+}
+.menu__sub:hover { border-color: var(--ink); }
+
+@media (max-width: 1000px) {
+  .hero { flex-direction: column-reverse; align-items: flex-start; gap: 24px; }
+  .steps { grid-template-columns: 1fr; }
+  .home { grid-template-columns: 1fr; }
+  .play-card { flex-direction: column; align-items: flex-start; }
+}
+.menu__icon--blue { background: var(--lv-beginner); }
+.menu__icon--yellow { background: var(--lv-intermediate); }
+.menu__icon--green { background: var(--success-bg); }
+.menu__icon--red { background: var(--lv-advanced); }

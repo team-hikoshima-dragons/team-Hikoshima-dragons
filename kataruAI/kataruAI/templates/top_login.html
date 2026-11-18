@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ホーム | カタルAI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Zen+Maru+Gothic:wght@500;900&display=swap">
+  <link rel="stylesheet" href="../static/css/common.css">
+  <link rel="stylesheet" href="../static/css/pages/top.css">
+</head>
+<body>
+<!-- 画面ID: Top-Login -->
+<div class="page">
+
+  <!-- No.2 ログイン済みトップ専用ヘッダー -->
+  <header class="header">
+    <a href="top_login.html" class="logo">カタル<span>AI</span></a><!-- No.1 イベント1 -->
+    <nav class="gnav" aria-label="メインメニュー">
+      <a href="top_login.html" class="gnav__item">ホーム</a><!-- No.2 イベント1 -->
+      <a href="scenario_list.html" class="gnav__item" aria-current="page">シナリオ一覧</a><!-- No.3 イベント2 -->
+      <a href="play_history.html" class="gnav__item">プレイ履歴</a><!-- No.4 イベント3 -->
+      <a href="mypage.html" class="gnav__item"><span class="avatar">K</span><span class="gnav__label">マイページ</span></a><!-- No.5 イベント4 -->
+    </nav>
+  </header>
+
+  <main class="main main--center">
+    <div class="container">
+      <div class="home">
+
+        <!-- No.5 ゲームプレイ窓 -->
+        <section class="card card--ink play-card">
+          <img class="play-card__mascot" src="../static/img/katarun.svg" alt="カタルン" width="150" height="140"><!-- No.13 -->
+          <form class="play-card__body" onsubmit="return false">
+            <p class="play-card__hello">おかえり、Kさん</p><!-- No.6 -->
+            <h2 class="play-card__title">ランダムなお題で遊ぶ</h2><!-- No.7 -->
+
+            <!-- No.8〜10 難易度 -->
+            <fieldset class="seg">
+              <legend class="visually-hidden">難易度</legend>
+              <input type="radio" name="difficulty" id="lv-beginner" value="beginner">
+              <label for="lv-beginner">初級</label>
+              <input type="radio" name="difficulty" id="lv-intermediate" value="intermediate" checked>
+              <label for="lv-intermediate">中級</label>
+              <input type="radio" name="difficulty" id="lv-advanced" value="advanced">
+              <label for="lv-advanced">上級</label>
+            </fieldset>
+            <p class="play-card__desc" id="difficulty-desc">中級：12ターン。標準ルール。</p><!-- No.11 -->
+            <button type="submit" id="start-btn" class="btn btn--primary">プレイ</button><!-- No.12 イベント12 -->
+          </form>
+        </section>
+
+        <!-- No.14・15 メニュー -->
+        <nav aria-label="メニュー">
+          <div class="menu">
+            <a href="scenario_list.html" class="menu__item">
+              <span class="menu__icon menu__icon--blue" aria-hidden="true">📚</span>
+              <p class="menu__title">シナリオ一覧</p><p class="menu__text">お題を選んで遊ぶ</p>
+            </a>
+            <a href="ranking.html" class="menu__item">
+              <span class="menu__icon menu__icon--yellow" aria-hidden="true">🏆</span>
+              <p class="menu__title">ランキング</p><p class="menu__text">ハイスコアを見る</p>
+            </a>
+            <a href="scenario_create.html" class="menu__item">
+              <span class="menu__icon menu__icon--green" aria-hidden="true">✏️</span>
+              <p class="menu__title">シナリオ作成</p><p class="menu__text">お題を作って公開</p>
+            </a>
+            <a href="play_history.html" class="menu__item">
+              <span class="menu__icon menu__icon--red" aria-hidden="true">🕘</span>
+              <p class="menu__title">プレイ履歴</p><p class="menu__text">過去の会話を見返す</p>
+            </a>
+            <a href="#" class="menu__sub">遊び方</a><!-- イベント5（後回し） -->
+            <a href="settings.html" class="menu__sub">設定</a><!-- イベント7 -->
+          </div>
+        </nav>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- O1 ログアウトオーバーレイ（No.16〜21） -->
+<div class="overlay" id="overlay-logout" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="logout-title">
+    <img class="modal__mascot" src="../static/img/katarun.svg" alt="" width="88" height="82"><!-- No.17 -->
+    <h3 class="modal__title" id="logout-title">ログアウトしますか？</h3><!-- No.18 -->
+    <p class="modal__text">プレイの記録は保存されています。</p><!-- No.19 -->
+    <div class="modal__actions">
+      <button type="button" class="btn" data-close>キャンセル</button><!-- No.20 イベント14 -->
+      <!-- No.21 イベント15：Djangoのログアウトは POST 必須。本番は action="{% url 'logout' %}" ＋ {% csrf_token %} -->
+      <form action="top_nologin.html" method="get">
+        <button type="submit" class="btn btn--primary">ログアウト</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- No.22 お題生成中表示 -->
+<div class="overlay" id="overlay-generating" data-static hidden>
+  <div class="modal" role="status" aria-live="polite">
+    <div class="spinner" aria-hidden="true"></div>
+    <p class="modal__title">お題を作っています…（数秒〜十数秒）</p>
+  </div>
+</div>
+
+<!-- No.23・24 生成エラー -->
+<div class="overlay" id="overlay-gen-error" hidden>
+  <div class="modal" role="alertdialog" aria-labelledby="gen-error-title">
+    <button type="button" class="modal__close" data-close aria-label="閉じる">×</button>
+    <p class="modal__title" id="gen-error-title">通信エラーが発生しました</p>
+    <p class="modal__text">お題を作れませんでした。もう一度ためしてね。</p>
+    <div class="modal__actions">
+      <button type="button" class="btn" data-close>キャンセル</button>
+      <button type="button" class="btn btn--primary" id="retry-btn">再試行</button>
+    </div>
+  </div>
+</div>
+
+<script src="../static/js/common.js"></script>
+<script src="../static/js/top.js"></script>
+</body>
+</html>

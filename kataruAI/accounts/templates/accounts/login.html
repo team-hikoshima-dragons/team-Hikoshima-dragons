@@ -1,0 +1,73 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ログイン | カタルAI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Zen+Maru+Gothic:wght@500;900&display=swap">
+  <link rel="stylesheet" href="{% static 'css/common.css' %}">
+  <link rel="stylesheet" href="{% static 'css/pages/auth.css' %}">
+</head>
+<body>
+<!-- 画面ID: Login
+    モック：?error=1 を付けると認証失敗時の表示（Figma「Login(認証失敗時)」）になる -->
+<div class="page">
+  <header class="header"><!-- No.3 -->
+    <a href="{% url 'kataruAI:index' %}" class="logo">カタル<span>AI</span></a><!-- No.1 イベント1 -->
+    <a href="{% url 'kataruAI:index' %}" class="header__link">← トップへ</a><!-- No.2 イベント16 -->
+  </header>
+
+  <main class="main main--center">
+    <!-- No.15 ログインカード全体 -->
+    <section class="card card--ink auth-card">
+      <div class="auth-card__head">
+        <img src="{% static 'img/katarun.svg' %}" alt="" width="52" height="48">
+        <div>
+          <h1 class="auth-card__title">ログイン</h1><!-- No.4 -->
+          <p class="auth-card__lead">おかえり！つづきから遊ぼう。</p><!-- No.5 -->
+        </div>
+      </div>
+
+      <!-- 本番：method="post" ＋ {% csrf_token %}（イベント18） -->
+      <form action="#" method="get" novalidate>
+        <!-- No.16 エラーメッセージ（認証失敗時のみ） -->
+        <p class="alert alert--error" id="login-error" role="alert" hidden>メールアドレスかパスワードが間違っています！</p>
+
+        <div class="field">
+          <label class="field__label" for="email">メールアドレス</label><!-- No.6 -->
+          <input class="input" type="email" id="email" name="email" placeholder="example@mail.com" autocomplete="email" required><!-- No.7 -->
+        </div>
+        <div class="field">
+          <label class="field__label" for="password">パスワード</label><!-- No.8 -->
+          <input class="input" type="password" id="password" name="password" autocomplete="current-password" required><!-- No.9 -->
+        </div>
+
+        <label class="check"><!-- No.10・11 -->
+          <input type="checkbox" name="remember_me" value="1">ログイン状態を保持する
+        </label>
+
+        <button type="submit" class="btn btn--primary btn--block">ログイン</button><!-- No.12 イベント18 -->
+      </form>
+
+      <div class="auth-card__links">
+        <!-- No.13 イベント19（＋α機能。作らない場合はこのリンクを消す） -->
+        <a href="#">パスワードを忘れた</a>
+        <a href="{% url 'accounts:signup' %}">新規登録はこちら</a><!-- No.14 イベント10 -->
+      </div>
+    </section>
+  </main>
+</div>
+
+<script src="{% static 'js/common.js' %}"></script>
+<script>
+  // モック用：認証失敗時の表示確認
+  if (new URLSearchParams(location.search).get("error") === "1") {
+    document.getElementById("login-error").hidden = false;
+    document.getElementById("email").value = "kataru@example.com"; // 前回入力値を保持
+  }
+</script>
+</body>
+</html>

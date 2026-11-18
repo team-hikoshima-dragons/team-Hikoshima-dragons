@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>新規登録 | カタルAI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Zen+Maru+Gothic:wght@500;900&display=swap">
+  <link rel="stylesheet" href="../static/css/common.css">
+  <link rel="stylesheet" href="../static/css/pages/auth.css">
+</head>
+<body>
+<!-- 画面ID: SignUp
+    モック：メールアドレスに taken@example.com を入れると「登録済み」エラーを確認できる -->
+<div class="page">
+  <header class="header"><!-- No.4 -->
+    <a href="top_nologin.html" class="logo">カタル<span>AI</span></a>
+    <a href="top_nologin.html" class="header__link">← もどる</a><!-- No.1 イベント16 -->
+  </header>
+
+  <main class="main">
+    <div class="signup">
+      <div class="signup__head">
+        <h1 class="signup__title">新規登録</h1><!-- No.2 -->
+        <progress class="progress" id="progress" max="4" value="0" aria-label="登録の進み具合">0/4</progress><!-- No.3 -->
+      </div>
+
+      <!-- No.5 会話エリア（No.6・7・13 の吹き出しをJSで追加していく） -->
+      <section class="card chat" id="chat" aria-live="polite"></section>
+
+      <!-- No.11 入力エリア：ステップに応じて入力欄を切り替える -->
+      <form class="card composer" id="composer" novalidate>
+        <div class="field">
+          <label class="field__label" for="input-username" id="input-label">ニックネーム</label><!-- No.8 -->
+          <!-- No.17 ニックネーム -->
+          <input class="input" type="text" id="input-username" name="username" placeholder="カタルン" data-step="0">
+          <!-- No.9 メールアドレス -->
+          <input class="input" type="email" id="input-email" name="email" placeholder="example@mail.com" autocomplete="email" data-step="1" hidden>
+          <!-- No.14 パスワード -->
+          <input class="input" type="password" id="input-password" name="password" autocomplete="new-password" data-step="2" hidden>
+          <!-- No.15 パスワード（確認） -->
+          <input class="input" type="password" id="input-password-confirm" name="password_confirm" autocomplete="new-password" data-step="3" hidden>
+        </div>
+        <button type="submit" class="btn btn--primary" id="send-btn">送る</button><!-- No.10 イベント17 -->
+      </form>
+
+      <!-- No.16 ログインするボタン（登録完了時のみ） -->
+      <div id="done-area" class="signup__done" hidden>
+        <a href="login.html" class="btn btn--primary">ログインする</a>
+      </div>
+
+      <p class="signup__foot">アカウントをお持ちの方は <a href="login.html">ログイン</a></p><!-- No.12 イベント8 -->
+    </div>
+  </main>
+</div>
+
+<!-- 吹き出しのひな型（JSで複製して textContent を入れる） -->
+<template id="tpl-bot">
+  <div class="msg msg--bot msg-in">
+    <img class="msg__icon" src="../static/img/katarun.svg" alt="カタルン" width="52" height="48"><!-- No.6 -->
+    <p class="msg__bubble"></p><!-- No.7 -->
+  </div>
+</template>
+<template id="tpl-user">
+  <div class="msg msg--user msg-in"><p class="msg__bubble"></p></div><!-- No.13 -->
+</template>
+
+<script src="../static/js/common.js"></script>
+<script src="../static/js/signup.js"></script>
+</body>
+</html>

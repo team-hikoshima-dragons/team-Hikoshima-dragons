@@ -1,6 +1,6 @@
 services:
   web:
-    build: ./django
+    build: ./django # djangoのフォルダの中のdockerfileからビルドする
     command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - ../kataruAI:/KataruAI_work

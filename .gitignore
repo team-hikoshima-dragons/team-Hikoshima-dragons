@@ -21,3 +21,5 @@ Thumbs.db
 #nodeのキャッシュ
 node_modules/
 frontend/dist/
+
+staticfiles/

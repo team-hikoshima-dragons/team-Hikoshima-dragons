@@ -22,7 +22,7 @@
       if (mockError) {
         error.hidden = false;
       } else {
-        location.href = "play.html";
+        location.href = "/plays/";
       }
     }, 1500);
   }

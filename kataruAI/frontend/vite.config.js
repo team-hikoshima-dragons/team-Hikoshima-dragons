@@ -6,10 +6,11 @@ export default defineConfig({
   base: '/static/',
   server: {
     proxy: {
-      '/api': 'http://web:8000',   // Djangoコンテナへ転送
+      '/api': 'http://web:8000',          // Djangoコンテナへ転送
+      '/plays/chat': 'http://web:8000',   // ← 追加：ChatBoxの送信先
     },
     watch: {
-      usePolling: true,            // C:\ に置いてるとファイル変更が届かないため
+      usePolling: true,                   // C:\ に置いてるとファイル変更が届かないため
     },
   },
 })

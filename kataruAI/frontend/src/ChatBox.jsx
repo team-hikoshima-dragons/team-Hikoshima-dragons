@@ -21,12 +21,13 @@ export default function ChatBox() {
     // 送信ボタンを押したときの処理
     const sendMessage = async () => {
         const text = input.trim()
-        if (!text || loading) return
+        if (!text || loading || turnsLeft <= 0) return
 
         // 自分の発言を履歴に足して、入力欄を空にする
         const newMessages = [...messages, { role: 'user', text }]
         setMessages(newMessages)
         setInput('')
+        setTurnsLeft((n) => n - 1)   // ← 追加：発言ごとに1消費
         setLoading(true)
 
         try {
@@ -62,6 +63,9 @@ export default function ChatBox() {
         }
     }
 
+    const TURN_MAX = 15                         // 上限（今は固定。将来は難易度で変える）
+    const [turnsLeft, setTurnsLeft] = useState(TURN_MAX)
+
     return (
         <div className="play-page">
             <header className="play-header">
@@ -70,7 +74,7 @@ export default function ChatBox() {
                 <span className="tag-ink">お題</span>
                 <p>頑固な喫茶店マスターに、閉店を30分延ばしてもらおう</p>
             </div>
-            <div className="turns">
+            <div className={'turns' + (turnsLeft <= 3 ? ' is-low' : '')}>
                 残り<span className="turns__num">15</span>/ <span>15</span>ターン
             </div>
             <button type="button" className="btn-text btn-text--danger">あきらめる</button>
@@ -126,7 +130,7 @@ export default function ChatBox() {
                     onKeyDown={handleKeyDown}
                     placeholder="マスターに話しかけよう（120文字まで）"
                     />
-                    <button type="button" className="btn btn--primary" onClick={sendMessage} disabled={loading || !input.trim()}>
+                    <button type="button" className="btn btn--primary" onClick={sendMessage} disabled={loading || !input.trim() || turnsLeft <= 0}>
                     送信
                     </button>
                 </div>

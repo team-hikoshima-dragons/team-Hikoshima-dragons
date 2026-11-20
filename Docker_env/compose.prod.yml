@@ -66,7 +66,7 @@ services:
 
   frontend:               # 追加
     container_name: React_vite
-    image: node:22
+    image: node:22-slim
     working_dir: /app
     command: sh -c "npm ci && npm run dev -- --host"
     volumes:

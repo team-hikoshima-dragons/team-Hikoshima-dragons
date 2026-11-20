@@ -1,0 +1,66 @@
+# 開発用
+
+services:
+  web:
+    container_name: django
+    build: ./django # djangoのフォルダの中のdockerfileからビルドする
+
+    # command: sh -c "/code/entrypoint.sh" # シェルスクリプトを実行
+    command: python manage.py runserver 0.0.0.0:8000 # 開発環境はrunserverを使う
+
+    volumes:
+    # ボリュームを指定
+    # ローカルのカレントディレクトリをコンテナの/codeにマウントする
+    # ローカルの/staticをコンテナの/staticにマウントする
+      - ../kataruAI:/KataruAI_work
+      - static:/KataruAI_work/staticfiles 
+
+    ports:
+    # ローカルの8000番ポートとコンテナの8000番ポートをつなぐ
+      - "8000:8000"
+
+    env_file:
+    # 環境変数を.envを使って設定
+      - .env
+    depends_on: # サービスの実行の順番を記載
+    # 先にdbを起動してからwebを起動する
+      db:
+        # dbのヘルスチェックが終わってからappを起動させる
+        condition: service_healthy
+
+  db:                     # 追加
+    container_name: PostgreSQL
+    image: postgres:16
+    env_file: .env        # envに入ってる環境変数をそのまま使う
+    volumes:
+      - db-data:/var/lib/postgresql/data
+  
+    healthcheck: # ヘルスチェック：DBが生きてるかどうか定期的に自動で確認んする。
+      
+      # test: mysqladmin ping -h 127.0.0.1 -u$$MYSQL_USER -p$$MYSQL_PASSWORD
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"] #↑はmySQL用
+      # ヘルスチェックのインターバルは10秒
+      interval: 10s
+      # タイムアウト時間は10秒
+      timeout: 10s
+      # リトライ回数は3回
+      retries: 3
+      # ヘルスチェックが失敗しても無視する時間は30秒
+      start_period: 30s
+
+  frontend:               # 追加
+    container_name: React_vite
+    image: node:22
+    working_dir: /app
+    command: sh -c "npm ci && npm run dev -- --host"
+    volumes:
+      - ../kataruAI/frontend:/app
+      - /app/node_modules  # Windows側のnode_modulesと混ぜない
+    ports:
+      - "5173:5173"
+    depends_on:
+      - web
+
+volumes:
+  db-data:
+  static:

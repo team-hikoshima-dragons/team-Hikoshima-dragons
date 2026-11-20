@@ -1,5 +1,8 @@
 FROM python:3.12
 
+# pycファイルの生成を禁止
+ENV PYTHONDONTWRITEBYTECODE=1
+
 ENV PYTHONUNBUFFERED=1
 
 WORKDIR /KataruAI_work

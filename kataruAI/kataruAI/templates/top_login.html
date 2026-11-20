@@ -16,12 +16,12 @@
 
   <!-- No.2 ログイン済みトップ専用ヘッダー -->
   <header class="header">
-    <a href="top_login.html" class="logo">カタル<span>AI</span></a><!-- No.1 イベント1 -->
+    <a href={% url 'kataruAI:Llogin' %} class="logo">カタル<span>AI</span></a><!-- No.1 イベント1 -->
     <nav class="gnav" aria-label="メインメニュー">
-      <a href="top_login.html" class="gnav__item">ホーム</a><!-- No.2 イベント1 -->
+      <a href{% url 'kataruAI:Llogin' %} class="gnav__item">ホーム</a><!-- No.2 イベント1 -->
       <a href="scenario_list.html" class="gnav__item" aria-current="page">シナリオ一覧</a><!-- No.3 イベント2 -->
       <a href="play_history.html" class="gnav__item">プレイ履歴</a><!-- No.4 イベント3 -->
-      <a href="mypage.html" class="gnav__item"><span class="avatar">K</span><span class="gnav__label">マイページ</span></a><!-- No.5 イベント4 -->
+      <a href={% url 'accounts:mypage' %} class="gnav__item"><span class="avatar">K</span><span class="gnav__label">マイページ</span></a><!-- No.5 イベント4 -->
     </nav>
   </header>
 
@@ -87,7 +87,7 @@
     <p class="modal__text">プレイの記録は保存されています。</p><!-- No.19 -->
     <div class="modal__actions">
       <button type="button" class="btn" data-close>キャンセル</button><!-- No.20 イベント14 -->
-      <!-- No.21 イベント15：Djangoのログアウトは POST 必須。本番は action="{% url 'logout' %}" ＋ {% csrf_token %} -->
+      <!-- No.21 イベント 15：Django のログアウトは POST 必須 -->
       <form action="top_nologin.html" method="get">
         <button type="submit" class="btn btn--primary">ログアウト</button>
       </form>

@@ -32,10 +32,11 @@
       </div>
 
       <!-- 本番：method="post" ＋ {% csrf_token %}（イベント18） -->
-      <form action="#" method="get" novalidate>
-        <!-- No.16 エラーメッセージ（認証失敗時のみ） -->
-        <p class="alert alert--error" id="login-error" role="alert" hidden>メールアドレスかパスワードが間違っています！</p>
-
+      <form action="#" method="post" novalidate>
+        {% csrf_token %}
+        {% if form.errors %}
+          <p class="alert alert--error" id="login-error" role="alert">メールアドレスかパスワードが間違っています！</p>
+        {% endif %}
         <div class="field">
           <label class="field__label" for="email">メールアドレス</label><!-- No.6 -->
           <input class="input" type="email" id="email" name="email" placeholder="example@mail.com" autocomplete="email" required><!-- No.7 -->

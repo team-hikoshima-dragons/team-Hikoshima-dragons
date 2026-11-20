@@ -50,6 +50,8 @@ INSTALLED_APPS = [
     'scenarios',
 ]
 
+LOGIN_REDIRECT_URL = "kataruAI:Lindex"
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',

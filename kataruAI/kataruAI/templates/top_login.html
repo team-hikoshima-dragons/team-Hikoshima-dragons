@@ -16,14 +16,19 @@
 
   <!-- No.2 ログイン済みトップ専用ヘッダー -->
   <header class="header">
-    <a href="top_login.html" class="logo">カタル<span>AI</span></a><!-- No.1 イベント1 -->
-    <nav class="gnav" aria-label="メインメニュー">
-      <a href="top_login.html" class="gnav__item">ホーム</a><!-- No.2 イベント1 -->
-      <a href="scenario_list.html" class="gnav__item" aria-current="page">シナリオ一覧</a><!-- No.3 イベント2 -->
-      <a href="play_history.html" class="gnav__item">プレイ履歴</a><!-- No.4 イベント3 -->
-      <a href="mypage.html" class="gnav__item"><span class="avatar">K</span><span class="gnav__label">マイページ</span></a><!-- No.5 イベント4 -->
-    </nav>
-  </header>
+  <a href="{% url 'kataruAI:Lindex' %}" class="logo">カタル<span>AI</span></a>
+  <nav class="gnav" aria-label="メインメニュー">
+    <a href="{% url 'kataruAI:Lindex' %}" class="gnav__item" aria-current="page">ホーム</a>
+    <a href="scenario_list.html" class="gnav__item">シナリオ一覧</a>
+    <a href="play_history.html" class="gnav__item">プレイ履歴</a>
+  </nav>
+  <div class="header__right">
+    <a href="{% url 'accounts:mypage' %}" class="gnav__item">
+      <span class="avatar">K</span><span class="gnav__label">マイページ</span>
+    </a>
+    <button type="button" class="btn btn--s" data-open="overlay-logout">ログアウト</button>
+  </div>
+</header>
 
   <main class="main main--center">
     <div class="container">
@@ -87,8 +92,9 @@
     <p class="modal__text">プレイの記録は保存されています。</p><!-- No.19 -->
     <div class="modal__actions">
       <button type="button" class="btn" data-close>キャンセル</button><!-- No.20 イベント14 -->
-      <!-- No.21 イベント15：Djangoのログアウトは POST 必須。本番は action="{% url 'logout' %}" ＋ {% csrf_token %} -->
-      <form action="top_nologin.html" method="get">
+      <!-- No.21 イベント 15：Django のログアウトは POST 必須 -->
+      <form action="{% url 'accounts:logout' %}" method="post">
+        {% csrf_token %}
         <button type="submit" class="btn btn--primary">ログアウト</button>
       </form>
     </div>

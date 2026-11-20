@@ -1,9 +1,10 @@
 from django.http import JsonResponse
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, TemplateView
-from django.contrib.auth.views import LoginView  as BaseLoginView
+from django.contrib.auth.views import LoginView  as BaseLoginView, LogoutView as BaseLogoutView
 from .forms import SignUpForm, LoginForm 
 from .models import UserSetting
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 
 class SignUpView(CreateView):
@@ -35,5 +36,9 @@ class LoginView(BaseLoginView):
 
         return super().form_valid(form)
 
-class MypageView():
+class LogoutView(BaseLogoutView):
+    next_page = reverse_lazy("kataruAI:index")
+
+class MypageView(LoginRequiredMixin,TemplateView):
     template_name = "accounts/mypage.html"
+    login_url = reverse_lazy("accounts:login")

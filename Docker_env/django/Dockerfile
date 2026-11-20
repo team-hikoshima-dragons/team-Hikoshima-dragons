@@ -13,5 +13,3 @@ COPY requirements.txt /KataruAI_work/
 RUN pip install -r requirements.txt
 
 COPY . /KataruAI_work/
-
-RUN chmod 755 entrypoint.sh

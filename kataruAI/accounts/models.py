@@ -94,9 +94,30 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 
 class UserSetting(models.Model):
+    class TextSpeed(models.TextChoices):
+        SLOW = 'slow', 'ゆっくり'
+        NORMAL = 'normal', 'ふつう'
+        FAST = 'fast', 'はやい'
 
     user = models.OneToOneField(
         User,
         primary_key=True,
         on_delete=models.CASCADE
+    )
+
+    text_speed = models.CharField(
+        verbose_name="テキスト速度",
+        max_length=10,
+        choices=TextSpeed.choices,
+        default=TextSpeed.NORMAL,
+    )
+
+    auto_save_chat = models.BooleanField(
+        verbose_name="チャット履歴の自動保存",
+        default=True,
+    )
+
+    updated_at = models.DateTimeField(
+        verbose_name="更新日時",
+        auto_now=True,
     )

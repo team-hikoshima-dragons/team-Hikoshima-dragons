@@ -13,12 +13,17 @@
 </head>
 <body>
 {% comment %}
-  画面ID: Result（ゲスト用）※Django のコメントなのでブラウザには送られない
-  設計元：モックの result.html の「?guest=1」表示。
-  ゲストなので、順位・自己ベスト更新・会話を見返す・ランキングを見る・会員用メニューは出さない。
+  画面ID: Result ※Django のコメントなのでブラウザには送られない
+  設計元：Drive のモック result.html。ゲスト（?guest=1 の表示）と会員で出し分ける。
+  ゲスト：順位・自己ベスト更新・会話を見返す・ランキングを見る・会員用メニューは出さない。
+  会員：今日のランキング順位はランダムなお題をクリアしたときだけ（result.today_rank）。
+        自己ベスト更新はユーザー作成シナリオだけが対象なので Phase 4b で対応する。
   失敗時は result.cleared の if で出し分ける。値は Django が自動でエスケープする（|safe は使わない）
 {% endcomment %}
 <div class="page">
+  {% if user.is_authenticated %}
+  {% include "partials/app_header.html" %}
+  {% else %}
   <header class="header">
     <a href="/" class="logo">カタル<span>AI</span></a>
     <nav class="gnav" aria-label="メインメニュー">
@@ -27,6 +32,7 @@
       </div>
     </nav>
   </header>
+  {% endif %}
 
   <main class="main">
     <div class="result{% if not result.cleared %} result--fail{% endif %}" id="result">
@@ -49,10 +55,13 @@
       </section>
 
       <div class="stats">
-        {# スコア（失敗時0点）。ゲストは今日のランキング順位を出さない #}
+        {# スコア（失敗時0点）。今日のランキング順位はゲスト・失敗・ユーザー作成シナリオでは出さない #}
         <section class="card stat">
           <p class="stat__label">スコア</p>
           <p class="stat__value"><span id="score">{{ result.score }}</span><small>点</small></p>
+          {% if result.today_rank %}
+          <p class="stat__sub" id="rank">今日のランキング <strong>{{ result.today_rank }}位</strong></p>
+          {% endif %}
         </section>
         <!-- ターン数 -->
         <section class="card stat">
@@ -71,8 +80,15 @@
       </div>
 
       <div class="result-actions">
+        {% if user.is_authenticated %}
+        {# もう一度挑戦する（イベント22）：同じシナリオ・同じ難易度で始める。削除済みなら無効化 #}
+        <button type="button" class="btn btn--primary" id="start-btn" data-scenario-id="{{ result.scenario_id }}"{% if not result.can_retry %} disabled{% endif %}>もう一度挑戦する</button>
+        <a href="/plays/history/{{ result.play_id }}/" class="btn" id="btn-log">会話を見返す</a>{# No.15 イベント21 #}
+        <a href="/rankings/" class="btn" id="btn-ranking">ランキングを見る</a>{# No.16 イベント6 #}
+        {% else %}
         <!-- もう一度挑戦する：top.js がお題を生成して、新しいプレイ画面へ移動する -->
         <button type="button" class="btn btn--primary" id="start-btn">もう一度挑戦する</button>
+        {% endif %}
       </div>
     </div>
   </main>
@@ -89,7 +105,7 @@
   <div class="modal" role="alertdialog" aria-labelledby="gen-error-title">
     <button type="button" class="modal__close" data-close aria-label="閉じる">×</button>
     <p class="modal__title" id="gen-error-title">通信エラーが発生しました</p>
-    <p class="modal__text">お題を作れませんでした。もう一度ためしてね。</p>
+    <p class="modal__text" id="gen-error-text">お題を作れませんでした。もう一度ためしてね。</p>
     <div class="modal__actions">
       <button type="button" class="btn" data-close>キャンセル</button>
       <button type="button" class="btn btn--primary" id="retry-btn">再試行</button>

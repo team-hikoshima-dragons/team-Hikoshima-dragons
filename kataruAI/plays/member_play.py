@@ -309,6 +309,7 @@ def result_view(play):
     if cleared and play.started_at and play.finished_at:
         seconds = max(int((play.finished_at - play.started_at).total_seconds()), 0)
     return {
+        "play_id": play.pk,
         "cleared": cleared,
         "score": play.score or 0,
         "title": play.scenario.title,

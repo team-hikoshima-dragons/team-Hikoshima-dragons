@@ -1,0 +1,82 @@
+# db(MySQL),app(Django),web(Nginx)のコンテナを作成
+services:
+  web:
+    container_name: django
+    build: ./django # djangoのフォルダの中のdockerfileからビルドする
+
+    command: sh -c "./entrypoint.sh"
+
+    volumes:
+    # ボリューム(作業ディレクトリ)を指定
+      - ../kataruAI:/KataruAI_work # kataruAIフォルダの直下を作業ディレクトリ(KataruAI_work)に指定
+    
+      - static:/KataruAI_work/staticfiles # ローカルの/staticをコンテナの/staticにマウントする
+
+    expose:
+    # 8000番ポートをNginx側が接続できるよう開く
+      - "8000"
+
+    env_file:
+    # コンテナ内の環境変数を.env.prodを使って設定
+      - .env.prod
+      # - .env ← 開発用
+    depends_on:
+      db:
+        # dbのヘルスチェックが終わってからappを起動させる
+        condition: service_healthy
+  nginx:
+    # コンテナ名をnginxに指定
+    container_name: nginx
+    # NginxのDockerfileをビルドする
+    build:
+      # ビルドコンテキストはカレントディレクトリ
+      context: .
+      dockerfile: ./nginx/Dockerfile
+    volumes:
+      # ボリュームを指定
+      # ローカルの/staticをコンテナの/staticにマウントする
+      - ./nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - static:/static:ro
+    # ローカルの80番ボートをコンテナの80番ポートとつなぐ
+    ports:
+      - "80:80"
+    # 先にwebを起動してからwebを起動する
+    depends_on:
+      - web
+  db:                     # 追加
+    container_name: PostgreSQL
+    image: postgres:16
+    env_file:
+      - .env.prod        # 開発用はenvだったが本番は違う
+    volumes:
+      - db-data:/var/lib/postgresql/data
+  
+    healthcheck: # ヘルスチェック：DBが生きてるかどうか定期的に自動で確認んする。
+      
+      # test: mysqladmin ping -h 127.0.0.1 -u$$MYSQL_USER -p$$MYSQL_PASSWORD
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"] #↑はmySQL用
+      # ヘルスチェックのインターバルは10秒
+      interval: 10s
+      # タイムアウト時間は10秒
+      timeout: 10s
+      # リトライ回数は3回
+      retries: 3
+      # ヘルスチェックが失敗しても無視する時間は30秒
+      start_period: 30s
+
+  frontend:               # 追加
+    container_name: React_vite
+    image: node:22-slim
+    working_dir: /app
+    command: sh -c "npm ci && npm run dev -- --host"
+    volumes:
+      - ../kataruAI/frontend:/app
+      - /app/node_modules  # Windows側のnode_modulesと混ぜない
+    ports:
+      - "5173:5173"
+    depends_on:
+      - web
+
+volumes:
+  db-data:
+  static:

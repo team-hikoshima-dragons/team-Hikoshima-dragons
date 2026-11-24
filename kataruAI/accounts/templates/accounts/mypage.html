@@ -1,0 +1,133 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>マイページ | カタルAI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Zen+Maru+Gothic:wght@500;900&display=swap">
+  <link rel="stylesheet" href="{% static 'css/common.css' %}">
+  <link rel="stylesheet" href="{% static 'css/pages/auth.css' %}">
+</head>
+<body>
+<!-- 画面ID: MyPage -->
+<div class="page">
+  <!-- 共通ヘッダー1（Common-Header）：ログイン後の画面で使う
+       Djangoでは 。表示中の画面に aria-current="page"（下線） -->
+  <header class="header">
+    <a href="top_login.html" class="logo">カタル<span>AI</span></a><!-- No.1 イベント1 -->
+    <nav class="gnav" aria-label="メインメニュー">
+      <a href="top_login.html" class="gnav__item">ホーム</a><!-- No.2 イベント1 -->
+      <a href="scenario_list.html" class="gnav__item">シナリオ一覧</a><!-- No.3 イベント2 -->
+      <a href="play_history.html" class="gnav__item">プレイ履歴</a><!-- No.4 イベント3 -->
+      <a href="mypage.html" class="gnav__item" aria-current="page"><span class="avatar">K</span><span class="gnav__label">マイページ</span></a><!-- No.5 イベント4 -->
+      
+    </nav>
+  </header>
+
+  <main class="main">
+    <div class="container container--narrow">
+
+      <!-- No.1 プロフィールカード -->
+      <section class="card card--ink">
+        <div class="profile">
+          <span class="avatar avatar--l">K</span><!-- No.2 -->
+          <div>
+            <h1 class="profile__name">Kさん</h1><!-- No.3 -->
+            <p class="profile__since">はじめたのは 2026/10/01</p><!-- No.4 -->
+          </div>
+          <div class="profile__stats">
+            <p class="profile__stat"><span>クリア数</span><span>12</span></p><!-- No.5・6 -->
+            <p class="profile__stat"><span>プレイ回数</span><span>20</span></p><!-- No.7・8 -->
+            <p class="profile__stat"><span>最高スコア</span><span>920</span></p><!-- No.9・10 -->
+          </div>
+        </div>
+        <div class="profile__links">
+          <a href="my_scenarios.html" class="btn btn--s">作成したシナリオ</a><!-- No.11 イベント35 -->
+          <a href="settings.html" class="btn btn--s">ゲーム設定</a><!-- No.12 イベント7 -->
+        </div>
+      </section>
+
+      <h2 class="section-title">アカウント情報</h2><!-- No.13 -->
+
+      <!-- 本番：method="post" ＋ {% csrf_token %}（イベント37） -->
+      <form id="account-form" novalidate>
+        <!-- No.14 プロフィール枠 -->
+        <section class="card form-card">
+          <h3>プロフィール</h3><!-- No.15 -->
+          <div class="form-grid">
+            <div class="field">
+              <label class="field__label" for="username">ユーザー名 <span class="req">必須</span></label><!-- No.16 -->
+              <input class="input" type="text" id="username" name="username" value="Kさん" maxlength="20"><!-- No.17 -->
+              <p class="field__note">ランキングに表示されます</p><!-- No.20 -->
+            </div>
+            <div class="field">
+              <label class="field__label" for="email">メールアドレス <span class="req">必須</span></label><!-- No.18 -->
+              <input class="input" type="email" id="email" name="email" value="kataru@example.com" autocomplete="email"><!-- No.19 -->
+              <p class="field__note">変えるときは「今のパスワード」も入力してね</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- No.21 パスワード変更枠 -->
+        <section class="card form-card">
+          <h3>パスワード変更 <small>変えるときだけ入力</small></h3><!-- No.22・23 -->
+          <div class="form-grid">
+            <div class="field">
+              <label class="field__label" for="current_password">今のパスワード</label><!-- No.24 -->
+              <input class="input" type="password" id="current_password" name="current_password" autocomplete="current-password"><!-- No.25 初期値は空 -->
+            </div>
+            <div></div>
+            <div class="field">
+              <label class="field__label" for="new_password">新しいパスワード</label><!-- No.26 -->
+              <input class="input" type="password" id="new_password" name="new_password" autocomplete="new-password"><!-- No.27 -->
+            </div>
+            <div class="field">
+              <label class="field__label" for="new_password_confirm">新しいパスワード（確認）</label><!-- No.28 -->
+              <input class="input" type="password" id="new_password_confirm" name="new_password_confirm" autocomplete="new-password"><!-- No.29 -->
+            </div>
+          </div>
+          <p class="field__note form-card__note">8文字以上で、英字と数字を両方入れてね。</p><!-- No.30 -->
+        </section>
+
+        <div class="form-actions">
+          <p class="alert" id="form-message" role="alert" hidden></p>
+          <button type="reset" class="btn">元に戻す</button><!-- No.31 イベント36 -->
+          <button type="submit" class="btn btn--primary">保存する</button><!-- No.32 イベント37 -->
+        </div>
+      </form>
+
+      <!-- No.33 アカウント削除枠 -->
+      <section class="card form-card danger-zone">
+        <div>
+          <h3>アカウントの削除</h3><!-- No.34 -->
+          <p class="field__note">プレイ履歴・作成したシナリオ・お気に入りがすべて消えます</p><!-- No.35 -->
+        </div>
+        <button type="button" class="btn btn--s btn--danger" data-open="overlay-delete">アカウントを削除</button><!-- No.36 イベント38 -->
+      </section>
+    </div>
+  </main>
+</div>
+
+<!-- O1 アカウント削除確認オーバーレイ（No.37〜41）：ログアウトと同じ部品 -->
+<div class="overlay" id="overlay-delete" hidden>
+  <div class="modal" role="alertdialog" aria-modal="true" aria-labelledby="delete-title"><!-- No.37 -->
+    <img class="modal__mascot" src="../static/img/katarun.svg" alt="" width="88" height="82">
+    <h3 class="modal__title" id="delete-title">アカウントを削除しますか？</h3><!-- No.38 -->
+    <p class="modal__text">この操作は取り消せません。プレイ履歴・作成したシナリオ・お気に入りがすべて消えます。</p><!-- No.39 -->
+    <div class="modal__actions">
+      <button type="button" class="btn" data-close>キャンセル</button><!-- No.40 イベント53 -->
+      <!-- No.41 イベント54：本番は POST ＋ {% csrf_token %} -->
+      <form action="top_nologin.html" method="get">
+        <button type="submit" class="btn btn--danger">削除する</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="../static/js/common.js"></script>
+<script src="../static/js/mypage.js"></script>
+</body>
+</html>

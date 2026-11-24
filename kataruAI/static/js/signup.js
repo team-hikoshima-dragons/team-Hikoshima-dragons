@@ -101,11 +101,35 @@
       return;
     }
 
-    // 最終ステップOK → 本番はここでサーバーへPOST（fetch ＋ X-CSRFToken）
-    progress.value = 4;
-    form.hidden = true;
-    addBubble(tplBot, "登録できたよ！さっそくログインして遊ぼう。");
-    doneArea.hidden = false;
+    // 最終ステップOK → サーバーへPOST送信してDBに保存する
+    const sendBtn = document.getElementById("send-btn");
+    sendBtn.disabled = true;
+
+    fetch(location.href, {
+      method: "POST",
+      body: new FormData(form),
+      headers: {
+        "X-Requested-With": "XMLHttpRequest"
+      }
+    })
+      .then(function (res) {
+        return res.json().then(function (data) {
+          if (!res.ok || !data.ok) {
+            throw new Error(data.error || "登録に失敗しました。入力内容を確認してね。");
+          }
+          return data;
+        });
+      })
+      .then(function () {
+        progress.value = 4;
+        form.hidden = true;
+        addBubble(tplBot, "登録できたよ！さっそくログインして遊ぼう。");
+        doneArea.hidden = false;
+      })
+      .catch(function (err) {
+        sendBtn.disabled = false;
+        addBubble(tplBot, err.message, true);
+      });
   });
 
   showStep(0);

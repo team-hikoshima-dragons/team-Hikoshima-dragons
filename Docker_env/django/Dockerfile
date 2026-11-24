@@ -1,4 +1,7 @@
-FROM python:3.12
+FROM python:3.12-slim
+
+# pycファイルの生成を禁止
+ENV PYTHONDONTWRITEBYTECODE=1
 
 ENV PYTHONUNBUFFERED=1
 

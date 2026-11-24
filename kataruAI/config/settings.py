@@ -28,11 +28,9 @@ SECRET_KEY = os.environ["DJANGO_SECRET_KEY"]
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = [
-    'localhost',
-    '0.0.0.0',
-    '127.0.0.1',
-]
+ALLOWED_HOSTS = os.environ.get(
+    "DJANGO_ALLOWED_HOSTS", "localhost,0.0.0.0,127.0.0.1"
+).split(",")
 
 
 # Application definition
@@ -49,6 +47,8 @@ INSTALLED_APPS = [
     'plays',
     'scenarios',
 ]
+
+LOGIN_REDIRECT_URL = "kataruAI:Lindex"
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -136,6 +136,8 @@ STATICFILES_DIRS = [
     BASE_DIR / 'frontend' / 'dist',
     os.path.join(BASE_DIR, 'static'),
 ]
+
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # Email
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration

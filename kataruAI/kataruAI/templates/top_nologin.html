@@ -22,7 +22,7 @@
       <!-- No.2 遊び方（イベント5：後回し） -->
       <a href="#" class="header__link">遊び方</a>
       <!-- No.5 ログイン（イベント8） -->
-      <a href="login.html" class="btn btn--s">ログイン</a>
+      <a href={% url "accounts:login" %} class="btn btn--s">ログイン</a>
     </div>
   </header>
 
@@ -34,7 +34,7 @@
           <p class="hero__lead">毎回ちがうキャラクターと会話して、ゴールを目指す対話ゲーム。<br>ゲストならすぐに遊べます。</p><!-- No.7 -->
           <div class="hero__actions">
             <button type="button" id="start-btn" class="btn btn--primary">ゲストで遊ぶ</button><!-- No.8 イベント9 -->
-            <a href="signup.html" class="btn">新規登録</a><!-- No.9 イベント10 -->
+            <a href="{% url 'accounts:signup' %}" class="btn">新規登録</a><!-- No.9 イベント10 -->
           </div>
           <p class="hero__note">※ゲストのプレイ結果はランキング・履歴に保存されません</p><!-- No.10 -->
           <!-- No.11 今日のカラー（用途・仕様が未定義） -->

@@ -1,122 +1,63 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+// React Router から必要な道具を取り寄せる
+import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
+import ChatBox from './components/ChatBox';
+import './App.css';
 
-function App() {
-  const [count, setCount] = useState(0)
-
-  return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
+export default function App() {
+    return (
+        <BrowserRouter>
+            <div className="app-container">
+                {/* ホーム画面のヘッダーやナビゲーションを置くスペース */}
+                <header className="app-header">
+                    <h1>マイアプリ ホーム</h1>
+                </header>
+                <nav
+                    style={{
+                        display: "flex",
+                        gap: "16px",
+                        padding: "12px",
+                        backgroundColor: "#eee",
+                        borderRadius: "8px",
+                        marginBottom: "24px",
+                    }}
                 >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+                    <Link to="/">ホーム</Link>
+                    <Link to="/chatbox">チャットホーム</Link>
+                </nav>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+                {/* ④ URLに合わせて画面を切り替えるエリア */}
+                <Routes>
+                    {/* ① URLが「/」（最初の画面）のときの表示 */}
+                    <Route 
+                        path="/" 
+                        element={
+                            <div style={{ textAlign: "center", marginTop: "40px" }}>
+                                <h2>AIチャットアプリへようこそ！</h2>
+                                <p>下のボタン、または上のメニューからチャット画面へ進んでください。</p>
+                                <Link to="/chatbox">
+                                    <button 
+                                        style={{ 
+                                            padding: "12px 24px", 
+                                            fontSize: "16px", 
+                                            backgroundColor: "#007bff", 
+                                            color: "white", 
+                                            border: "none", 
+                                            borderRadius: "6px", 
+                                            cursor: "pointer",
+                                            marginTop: "16px" 
+                                        }}
+                                    >
+                                        チャットを始める 🚀
+                                    </button>
+                                </Link>
+                            </div>
+                        } 
+                    />
+
+                    {/* ② URLが「/chatbox」のときに ChatBox を表示 */}
+                    <Route path="/chatbox" element={<ChatBox />} />
+                </Routes>
+            </div>
+        </BrowserRouter>
+    );
 }
-
-export default App

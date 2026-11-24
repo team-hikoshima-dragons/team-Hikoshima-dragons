@@ -1,6 +1,6 @@
 /* トップ画面：ゲーム開始（イベント9・12）と難易度説明の切り替え
-   本番：POST /api/plays/ → 成功したら返ってきた play_id でプレイ画面へ。
-   モック：URLに ?mock=error を付けると生成失敗の表示を確認できる */
+   POST /api/plays/ → 成功したら返ってきた play_url（プレイ画面）へ移動する。
+   失敗したら生成エラーの表示を出す（再試行できる）。 */
 (function () {
   "use strict";
 
@@ -8,23 +8,45 @@
   const loading = document.getElementById("overlay-generating");
   const error = document.getElementById("overlay-gen-error");
   const retryBtn = document.getElementById("retry-btn");
-  const mockError = new URLSearchParams(location.search).get("mock") === "error";
+  // Django が配る csrftoken の Cookie を読む（POST で X-CSRFToken ヘッダーに入れる。AGENTS.md §6）
+  function getCookie(name) {
+    const prefix = name + "=";
+    const found = document.cookie.split("; ").find(function (row) { return row.startsWith(prefix); });
+    return found ? decodeURIComponent(found.slice(prefix.length)) : "";
+  }
+
+  function showError() {
+    loading.hidden = true;
+    startBtn.disabled = false;
+    if (error) error.hidden = false;
+  }
 
   function startGame() {
     if (error) error.hidden = true;
     loading.hidden = false;
     startBtn.disabled = true; // 生成中はプレイボタンを無効化（No.22）
 
-    // ↓ 本番はここを fetch に置き換える
-    setTimeout(function () {
-      loading.hidden = true;
-      startBtn.disabled = false;
-      if (mockError) {
-        error.hidden = false;
-      } else {
-        location.href = "/plays/";
-      }
-    }, 1500);
+    // 難易度の選択がある画面ならそれを送る（ゲストはサーバー側で初級固定）
+    const checked = document.querySelector('input[name="difficulty"]:checked');
+    const body = checked ? { difficulty: checked.value } : {};
+
+    fetch("/api/plays/", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json", "X-CSRFToken": getCookie("csrftoken") },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(45000) // サーバー側の Gemini 待ち（25秒）より長めに待つ
+    })
+      .then(function (res) {
+        return res.json().catch(function () { return null; }).then(function (data) {
+          if (res.ok && data && data.play_url) {
+            location.href = data.play_url; // 成功：プレイ画面へ
+          } else {
+            showError();
+          }
+        });
+      })
+      .catch(showError); // 通信そのものの失敗（タイムアウトなど）
   }
 
   if (startBtn) startBtn.addEventListener("click", startGame);

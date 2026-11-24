@@ -11,7 +11,3 @@ class IndexContent(TemplateView):
         if self.request.user.is_authenticated:
             return ["top_login.html"]
         return ["top_nologin.html"]
-
-
-class LoginContent(TemplateView):
-    template_name = "top_login.html"

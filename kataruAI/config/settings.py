@@ -49,7 +49,7 @@ INSTALLED_APPS = [
     'scenarios',
 ]
 
-LOGIN_REDIRECT_URL = "kataruAI:Lindex"
+LOGIN_REDIRECT_URL = "kataruAI:index"
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

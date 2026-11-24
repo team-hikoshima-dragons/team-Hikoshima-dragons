@@ -1,0 +1,103 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>リザルト | カタルAI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Zen+Maru+Gothic:wght@500;900&display=swap">
+  <link rel="stylesheet" href="{% static 'css/common.css' %}">
+  <link rel="stylesheet" href="{% static 'css/pages/result.css' %}">
+</head>
+<body>
+{% comment %}
+  画面ID: Result（ゲスト用）※Django のコメントなのでブラウザには送られない
+  設計元：モックの result.html の「?guest=1」表示。
+  ゲストなので、順位・自己ベスト更新・会話を見返す・ランキングを見る・会員用メニューは出さない。
+  失敗時は result.cleared の if で出し分ける。値は Django が自動でエスケープする（|safe は使わない）
+{% endcomment %}
+<div class="page">
+  <header class="header">
+    <a href="/" class="logo">カタル<span>AI</span></a>
+    <nav class="gnav" aria-label="メインメニュー">
+      <div class="header__right">
+        <a href="/" class="btn btn--s" id="guest-btn-home">ホームへ戻る</a>
+      </div>
+    </nav>
+  </header>
+
+  <main class="main">
+    <div class="result{% if not result.cleared %} result--fail{% endif %}" id="result">
+      <!-- 結果カード -->
+      <section class="card card--ink result-card">
+        <span class="face face--l"><img id="result-face" src="{% static result.face_path %}" alt="{{ result.character_name }}"></span>
+        <div class="result-card__info">
+          {% if result.cleared %}
+            <span class="badge badge--clear" id="result-badge">✓ クリア</span>
+            <h1 class="result-card__title" id="result-title">説得成功！</h1>
+          {% else %}
+            <span class="badge badge--fail" id="result-badge">× 失敗</span>
+            <h1 class="result-card__title" id="result-title">説得失敗…</h1>
+          {% endif %}
+          <p class="result-card__scenario">
+            <span>{{ result.title }}</span>
+            <span class="lv lv--{{ result.difficulty }}">{{ result.difficulty_label }}</span>
+          </p>
+        </div>
+      </section>
+
+      <div class="stats">
+        {# スコア（失敗時0点）。ゲストは今日のランキング順位を出さない #}
+        <section class="card stat">
+          <p class="stat__label">スコア</p>
+          <p class="stat__value"><span id="score">{{ result.score }}</span><small>点</small></p>
+        </section>
+        <!-- ターン数 -->
+        <section class="card stat">
+          <p class="stat__label">ターン数</p>
+          <p class="stat__value"><span id="turn-count">{{ result.turns_used }}</span><small>ターン</small></p>
+          <p class="stat__sub">上限 {{ result.turn_limit }}ターン</p>
+        </section>
+        <!-- クリアタイム：失敗時は非表示 -->
+        {% if result.cleared %}
+        <section class="card stat" id="time-card">
+          <p class="stat__label">クリアタイム</p>
+          <p class="stat__value">{{ result.clear_time_text }}</p>
+          <p class="stat__sub">分:秒</p>
+        </section>
+        {% endif %}
+      </div>
+
+      <div class="result-actions">
+        <!-- もう一度挑戦する：top.js がお題を生成して、新しいプレイ画面へ移動する -->
+        <button type="button" class="btn btn--primary" id="start-btn">もう一度挑戦する</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- お題生成中の表示と、生成エラー（top.js が使う。トップ画面と同じ部品） -->
+<div class="overlay" id="overlay-generating" data-static hidden>
+  <div class="modal" role="status" aria-live="polite">
+    <div class="spinner" aria-hidden="true"></div>
+    <p class="modal__title">お題を作っています…（数秒〜十数秒）</p>
+  </div>
+</div>
+<div class="overlay" id="overlay-gen-error" hidden>
+  <div class="modal" role="alertdialog" aria-labelledby="gen-error-title">
+    <button type="button" class="modal__close" data-close aria-label="閉じる">×</button>
+    <p class="modal__title" id="gen-error-title">通信エラーが発生しました</p>
+    <p class="modal__text">お題を作れませんでした。もう一度ためしてね。</p>
+    <div class="modal__actions">
+      <button type="button" class="btn" data-close>キャンセル</button>
+      <button type="button" class="btn btn--primary" id="retry-btn">再試行</button>
+    </div>
+  </div>
+</div>
+
+<script src="{% static 'js/common.js' %}"></script>
+<script src="{% static 'js/top.js' %}"></script>
+</body>
+</html>

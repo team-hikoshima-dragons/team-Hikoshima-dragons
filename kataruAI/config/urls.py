@@ -23,5 +23,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('kataruAI.urls')),
     path('plays/', include('plays.urls')), 
+    path('api/plays/', include('plays.api_urls')),
     path('accounts/', include('accounts.urls')),
 ]

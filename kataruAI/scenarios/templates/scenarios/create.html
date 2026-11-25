@@ -81,6 +81,10 @@
           </div>
 
           <p class="alert alert--error" id="form-error" role="alert" hidden></p>
+          {# ユースケース記述 ⑥-a：DB 保存に失敗したときだけ出す。AI を呼ばずに保存し直す #}
+          <div class="create__submit" id="resave-area" hidden>
+            <button type="button" class="btn btn--primary" id="resave-btn">再保存</button>
+          </div>
 
           <div class="create__submit">
             <a href="{% url 'scenarios:mine' %}" class="btn-text" id="cancel-link">キャンセル</a><!-- No.18 イベント42 -->

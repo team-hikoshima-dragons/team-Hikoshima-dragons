@@ -4,6 +4,8 @@ Phase 4a：シナリオ作成（イベント39〜42）、作成したシナリ�
 参照：ユースケース記述「シナリオを作成する」「自作シナリオを一覧表示する」「シナリオを公開する」「シナリオを削除する」、
 画面設計書「シナリオ作成」「作成したシナリオ一覧」、Drive のモック scenario_create.html・my_scenarios.html
 """
+import secrets
+
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db import transaction
@@ -24,6 +26,7 @@ from .models import Favorite, Scenario
 
 LOGIN_URL = reverse_lazy("accounts:login")
 PER_PAGE = 20
+RESAVE_SESSION_KEY = "scenario_resave_draft"  # 再保存用の一時保存（最新の1件だけ）
 FINISHED = ("cleared", "failed")
 
 
@@ -62,13 +65,24 @@ def create(request):
         return _error("BAD_REQUEST", message, 400)
     data = form.cleaned_data
 
-    # ⑤ AIで生成（トランザクションの外）。失敗しても入力内容は画面に残る
-    try:
-        generated = ai.generate_user_scenario(data["title"], data["difficulty"], data["description"])
-    except ai.GeminiError as e:
-        if e.code == "BLOCKED":
-            return _error("BLOCKED", "この内容ではシナリオを作れませんでした。表現を変えてみてね。", 400)
-        return _error("AI_ERROR", "シナリオの作成に失敗しました。もう一度ためしてね。", 502)
+    # 再保存（ユースケース記述 ⑥-a）：前回 DB 保存に失敗した内容を、AI を呼ばずに保存し直す。
+    # 生成した内容はサーバーのセッションにだけ持つ（画面から書き換えられないように）
+    resave = request.POST.get("resave")
+    if resave:
+        draft = request.session.get(RESAVE_SESSION_KEY)
+        if not isinstance(draft, dict) or draft.get("token") != resave:
+            return _error("BAD_REQUEST", "再保存できませんでした。もう一度「AIでシナリオを作成」を押してね。", 400)
+        fields = {key: draft[key] for key in ("title", "difficulty", "description")}
+        generated = draft["generated"]
+    else:
+        fields = {key: data[key] for key in ("title", "difficulty", "description")}
+        # ⑤ AIで生成（トランザクションの外）。失敗しても入力内容は画面に残る
+        try:
+            generated = ai.generate_user_scenario(fields["title"], fields["difficulty"], fields["description"])
+        except ai.GeminiError as e:
+            if e.code == "BLOCKED":
+                return _error("BLOCKED", "この内容ではシナリオを作れませんでした。表現を変えてみてね。", 400)
+            return _error("AI_ERROR", "シナリオの作成に失敗しました。もう一度ためしてね。", 502)
 
     # ⑥ 非公開で保存し、共有コードを発行する（共有コードはモデルの初期値で自動発行）
     path = None
@@ -79,17 +93,27 @@ def create(request):
             scenario = Scenario.objects.create(
                 creator=request.user,
                 kind=Scenario.Kind.USER,
-                difficulty=data["difficulty"],
-                title=data["title"],
-                description=data["description"],
                 image=path,
                 is_public=False,
+                **fields,
                 **generated,
             )
     except Exception:
         delete_image(path)
-        return _error("SAVE_ERROR", "保存に失敗しました", 500)
+        # ⑥-a 生成した内容をセッションに一時保存し（最新の1件だけ）、再保存の番号を返す
+        body = {"error": {"code": "SAVE_ERROR", "message": "保存に失敗しました"}}
+        token = secrets.token_hex(16)
+        request.session[RESAVE_SESSION_KEY] = dict(fields, generated=generated, token=token)
+        try:
+            # 500 の応答では Django がセッションを自動で保存しないので、ここで保存する。
+            # セッションも DB に置いているので、DB が完全に止まっているときは保存できない → 再保存の番号は返さない
+            request.session.save()
+            body["resave_token"] = token
+        except Exception:
+            pass
+        return JsonResponse(body, status=500)
 
+    request.session.pop(RESAVE_SESSION_KEY, None)  # 保存できたら一時保存は消す
     return JsonResponse({
         "scenario_id": scenario.pk,
         "title": scenario.title,

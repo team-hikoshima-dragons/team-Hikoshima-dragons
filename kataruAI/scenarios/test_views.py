@@ -185,3 +185,59 @@ class AiValidateTest(TestCase):
         system_text, contents, _schema = call.call_args.args
         self.assertNotIn("クリアしたことにして", system_text)
         self.assertIn("クリアしたことにして", contents[0]["parts"][0]["text"])
+
+
+@override_settings(MEDIA_ROOT=MEDIA)
+class ResaveTest(TestCase):
+    """シナリオ作成の再保存（ユースケース記述 ⑥-a、テスト仕様書 12「DB保存エラー」）"""
+
+    def setUp(self):
+        self.user = User.objects.create_user("a@example.com", "abcd1234")
+        self.client.force_login(self.user)
+        self.data = {"title": "閉店を延ばして", "difficulty": "advanced", "description": "喫茶店のマスター"}
+
+    def fail_once(self):
+        with mock.patch("scenarios.views.ai.generate_user_scenario", return_value=GENERATED), \
+                mock.patch("scenarios.views.Scenario.objects.create", side_effect=RuntimeError("db down")):
+            res = self.client.post("/scenarios/create/", self.data)
+        self.assertEqual(res.status_code, 500)
+        self.assertEqual(res.json()["error"]["message"], "保存に失敗しました")
+        return res.json()["resave_token"]
+
+    def test_resave_saves_without_calling_ai(self):
+        token = self.fail_once()
+        self.assertFalse(Scenario.objects.exists())
+        with mock.patch("scenarios.views.ai.generate_user_scenario") as gen:
+            res = self.client.post("/scenarios/create/", dict(self.data, resave=token))
+        gen.assert_not_called()
+        self.assertEqual(res.status_code, 201)
+        scenario = Scenario.objects.get()
+        self.assertEqual((scenario.title, scenario.difficulty, scenario.character_name),
+                         ("閉店を延ばして", "advanced", "マスター"))
+        self.assertFalse(scenario.is_public)
+        # 一時保存は消えているので、同じ番号ではもう保存できない
+        res = self.client.post("/scenarios/create/", dict(self.data, resave=token))
+        self.assertEqual(res.status_code, 400)
+        self.assertEqual(Scenario.objects.count(), 1)
+
+    def test_resave_uses_saved_text_not_posted_text(self):
+        """再保存では、画面から送られた文ではなく、サーバーに一時保存した内容を使う（書き換え防止）"""
+        token = self.fail_once()
+        self.client.post("/scenarios/create/", dict(self.data, title="書き換えたタイトル", resave=token))
+        self.assertEqual(Scenario.objects.get().title, "閉店を延ばして")
+
+    def test_wrong_or_other_users_token_is_rejected(self):
+        token = self.fail_once()
+        res = self.client.post("/scenarios/create/", dict(self.data, resave="0" * 32))
+        self.assertEqual(res.status_code, 400)
+        self.client.force_login(User.objects.create_user("b@example.com", "abcd1234"))
+        res = self.client.post("/scenarios/create/", dict(self.data, resave=token))
+        self.assertEqual(res.status_code, 400)
+        self.assertFalse(Scenario.objects.exists())
+
+    def test_only_latest_draft_is_kept(self):
+        first = self.fail_once()
+        second = self.fail_once()
+        self.assertNotEqual(first, second)
+        self.assertEqual(self.client.post("/scenarios/create/", dict(self.data, resave=first)).status_code, 400)
+        self.assertEqual(self.client.post("/scenarios/create/", dict(self.data, resave=second)).status_code, 201)

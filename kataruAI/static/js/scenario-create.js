@@ -70,8 +70,21 @@
     el.classList.remove("placeholder-text");
   }
 
+  /* ---------- 再保存（ユースケース記述 ⑥-a） ---------- */
+  let resaveToken = "";
+  function hideResave() {
+    resaveToken = "";
+    $("resave-area").hidden = true;
+  }
+  $("resave-btn").addEventListener("click", function () {
+    if (!resaveToken) return;
+    formError.hidden = true;
+    send(resaveToken);
+  });
+
   form.addEventListener("submit", function (e) {
     e.preventDefault();
+    hideResave(); // 作成し直すときは、前の一時保存は使わない
     formError.hidden = true;
     form.querySelectorAll(".is-error").forEach(function (el) { el.classList.remove("is-error"); });
 
@@ -80,7 +93,11 @@
     if (!t || t.length > 40) return showError("タイトルは1〜40文字で入力してね。", title);
     if (!form.querySelector('input[name="difficulty"]:checked')) return showError("難易度を選んでね。");
     if (!d || d.length > 400) return showError("説明は1〜400文字で入力してね。", desc);
+    send("");
+  });
 
+  // resave：再保存の番号（空なら AI で生成して作成する）
+  function send(resave) {
     const btn = $("generate-btn");
     btn.disabled = true;
     btn.textContent = "作成中…";
@@ -95,20 +112,33 @@
       $("preview-body").hidden = false;
     }
 
+    const body = new FormData(form);
+    if (resave) body.append("resave", resave);
+    $("resave-btn").disabled = true;
+
     fetch(location.pathname, {
       method: "POST",
       credentials: "same-origin",
       headers: { "X-CSRFToken": csrf },
-      body: new FormData(form),
+      body: body,
       signal: AbortSignal.timeout(45000) // サーバー側の Gemini 待ち（25秒）より長めに待つ
     })
       .then(function (res) {
         return res.json().catch(function () { return null; }).then(function (data) {
           done();
+          $("resave-btn").disabled = false;
           if (!res.ok || !data) {
             const message = data && data.error && data.error.message;
+            // DB 保存の失敗だけ「再保存」ボタンを出す（それ以外は出さない）
+            if (data && data.resave_token) {
+              resaveToken = data.resave_token;
+              $("resave-area").hidden = false;
+            } else {
+              hideResave();
+            }
             return showError(message || "シナリオの作成に失敗しました。もう一度ためしてね。");
           }
+          hideResave();
           setPreview("preview-name", data.character_name);
           setPreview("preview-intro", data.character_intro);
           setPreview("preview-goal", data.goal);
@@ -118,7 +148,8 @@
       })
       .catch(function () {
         done();
+        $("resave-btn").disabled = false;
         showError("通信エラーが発生しました。もう一度ためしてね。");
       });
-  });
+  }
 })();

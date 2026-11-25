@@ -21,6 +21,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_GET, require_POST
 
 from . import gemini, guest_play, member_play
+from .expressions import generate_scenario_and_expressions
 from .guest_play import GUEST_DIFFICULTY, GUEST_SESSION_KEY, PlayError
 
 
@@ -76,17 +77,20 @@ def start(request):
             play = member_play.start_with_scenario(request.user, data["scenario_id"])
         else:
             play = member_play.start_random(
-                request.user, data.get("difficulty"), gemini.generate_scenario
+                request.user, data.get("difficulty"), gemini.generate_scenario,
+                gemini.generate_expressions,
             )
         return JsonResponse(member_play.start_payload(play), status=201)
 
     try:
-        scenario = gemini.generate_scenario(GUEST_DIFFICULTY)
+        scenario, expressions = generate_scenario_and_expressions(
+            GUEST_DIFFICULTY, gemini.generate_scenario, gemini.generate_expressions
+        )
     except gemini.GeminiError:
         # ブロックされた場合も、利用者の発言が原因ではないので同じ扱い（再試行を促す）
         raise PlayError("AI_ERROR", "お題を作れませんでした。もう一度ためしてね。", 502)
 
-    play = guest_play.new_play(scenario, GUEST_DIFFICULTY, now=timezone.now())
+    play = guest_play.new_play(scenario, GUEST_DIFFICULTY, now=timezone.now(), expressions=expressions)
     _save(request, play)
     return JsonResponse(
         {"play_id": play["id"], "play_url": guest_play.play_url(play["id"])}, status=201

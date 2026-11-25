@@ -38,7 +38,7 @@
         {% for row in rows %}
         <li>
           <a href="{{ row.url }}" class="row row--link history-row{% if row.play.status == 'playing' %} history-row--playing{% endif %}">
-            <span class="face"><img src="{% static row.face_path %}" alt=""></span><!-- No.8 -->
+            <span class="face"><img src="{{ row.face_url }}" alt=""></span><!-- No.8 -->
             <div class="row__body">
               <div>
                 <div class="row__title">

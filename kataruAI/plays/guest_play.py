@@ -13,6 +13,7 @@ from dataclasses import asdict
 from datetime import datetime
 
 from . import game
+from .expressions import image_urls
 from .gemini import GeminiError
 
 GUEST_SESSION_KEY = "guest_play"  # セッションに入れるときのキー
@@ -53,11 +54,12 @@ def result_url(play_id):
 
 
 # ---------- 作成・取得 ----------
-def new_play(scenario, difficulty=GUEST_DIFFICULTY, now=None):
+def new_play(scenario, difficulty=GUEST_DIFFICULTY, now=None, expressions=None):
     """お題から、ゲスト用の新しいプレイ（dict）を作る。数値は初期値から始める。
 
     now : 開始日時（timezone.now() の値）。クリアタイムの計算に使う。
           このファイルは Django に依存しないので、呼び出し側（api.py）から受け取る。
+    expressions : 表情差分 SVG {表情: サニタイズ済みSVG}。なければ None（固定の SVG を使う）
     """
     rules = game.get_rules(difficulty)
     return {
@@ -72,6 +74,7 @@ def new_play(scenario, difficulty=GUEST_DIFFICULTY, now=None):
         "score": None,
         "started_at": _to_iso(now),   # 開始日時（ISO形式の文字列。セッションに入れられる形）
         "finished_at": None,          # 終了日時（クリア・失敗したときに入れる）
+        "expressions": expressions,   # 表情差分 SVG（セッションに持つ。DBには保存しない）
     }
 
 
@@ -115,6 +118,7 @@ def public_view(play):
         "state": play["state_text"],
         "expression": play["expression"],
         "text_speed": DEFAULT_TEXT_SPEED,
+        "expression_images": image_urls(play.get("expressions")),
     }
     # 終わっているプレイにはリザルトのURLを付ける
     if play["status"] in (game.CLEARED, game.FAILED):
@@ -233,6 +237,7 @@ def result_view(play):
     """
     rules = game.get_rules(play["difficulty"])
     cleared = play["status"] == game.CLEARED
+    images = image_urls(play.get("expressions"))
     seconds = _clear_seconds(play) if cleared else None
     return {
         "cleared": cleared,
@@ -247,4 +252,6 @@ def result_view(play):
         "clear_time_text": "—" if seconds is None else f"{seconds // 60}:{seconds % 60:02d}",
         # 結果カードの顔：クリアは笑顔、失敗は怒り顔（モックの result.html に合わせた固定の2種類）
         "face_path": "img/face-happy.svg" if cleared else "img/face-angry.svg",
+        # 生成した表情があればそちらを出す（クリア＝うれしい、失敗＝怒り）
+        "image_url": (images or {}).get("happy" if cleared else "angry"),
     }

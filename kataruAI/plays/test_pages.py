@@ -8,6 +8,7 @@ from unittest import mock
 
 from django.test import TestCase
 
+from .gemini import GeminiError
 from .guest_play import GUEST_SESSION_KEY
 
 SCENARIO = {
@@ -17,6 +18,14 @@ SCENARIO = {
 
 
 class ResultPageTest(TestCase):
+    def setUp(self):
+        super().setUp()
+        # 表情 SVG の生成は本物の Gemini を呼ばない（失敗扱い＝固定の SVG で始まる）
+        patcher = mock.patch("plays.api.gemini.generate_expressions",
+                             side_effect=GeminiError("AI_ERROR"))
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
     def start_play(self):
         """テスト用：プレイを開始して play_id を返す"""
         with mock.patch("plays.api.gemini.generate_scenario", return_value=SCENARIO):

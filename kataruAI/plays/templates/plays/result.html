@@ -89,8 +89,8 @@
         <a href="/plays/history/{{ result.play_id }}/" class="btn" id="btn-log">会話を見返す</a>{# No.15 イベント21 #}
         <a href="/rankings/" class="btn" id="btn-ranking">ランキングを見る</a>{# No.16 イベント6 #}
         {% else %}
-        <!-- もう一度挑戦する：top.js がお題を生成して、新しいプレイ画面へ移動する -->
-        <button type="button" class="btn btn--primary" id="start-btn">もう一度挑戦する</button>
+        {# もう一度挑戦する（イベント22）：ゲストはセッションに持っているお題で再挑戦する（top.js が retry を送る） #}
+        <button type="button" class="btn btn--primary" id="start-btn" data-retry>もう一度挑戦する</button>
         {% endif %}
       </div>
     </div>

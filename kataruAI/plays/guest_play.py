@@ -78,6 +78,20 @@ def new_play(scenario, difficulty=GUEST_DIFFICULTY, now=None, expressions=None):
     }
 
 
+def retry_play(previous, now=None):
+    """もう一度挑戦する（イベント22）：前のプレイと同じお題・同じ表情で、新しいプレイを作る。
+
+    数値・残りターン・会話は初期値から。前のプレイが無い・形が違うときは None（呼び出し側で新しいお題にする）。
+    """
+    if not isinstance(previous, dict) or not isinstance(previous.get("scenario"), dict):
+        return None
+    try:
+        return new_play(previous["scenario"], previous.get("difficulty", GUEST_DIFFICULTY),
+                        now=now, expressions=previous.get("expressions"))
+    except (KeyError, ValueError):
+        return None
+
+
 def _to_iso(moment):
     """日時を文字列にする。日時が渡されなかったら None（時間は記録しない）"""
     return moment.isoformat() if moment else None

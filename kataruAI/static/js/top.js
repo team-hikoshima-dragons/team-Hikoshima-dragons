@@ -34,7 +34,9 @@
     // それ以外は、難易度の選択がある画面ならそれを送る（ゲストはサーバー側で初級固定）
     const checked = document.querySelector('input[name="difficulty"]:checked');
     const scenarioId = startBtn.dataset.scenarioId;
-    const body = scenarioId ? { scenario_id: Number(scenarioId) }
+    // ゲストのリザルトの「もう一度挑戦する」は、セッションに持っているお題で始める（data-retry）
+    const body = startBtn.dataset.retry !== undefined ? { retry: true }
+      : scenarioId ? { scenario_id: Number(scenarioId) }
       : checked ? { difficulty: checked.value } : {};
 
     fetch("/api/plays/", {

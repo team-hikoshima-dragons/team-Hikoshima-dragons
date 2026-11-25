@@ -69,6 +69,7 @@ def start(request):
     会員：body の scenario_id があればそのシナリオで（お題は生成しない）、
           なければ body の difficulty でランダムなお題を生成して開始する。
     ゲスト：難易度は初級固定なので、リクエストの difficulty は使わない（設計書 ①-a）。
+          body の retry が true なら、セッションのお題で再挑戦する（イベント22）。
     どちらも生成に成功してから、前のプレイを置き換える（設計書 ②-a：失敗時は前のプレイを残す）。
     """
     data = _json_body(request)
@@ -81,6 +82,16 @@ def start(request):
                 gemini.generate_expressions,
             )
         return JsonResponse(member_play.start_payload(play), status=201)
+
+    # ゲストの「もう一度挑戦する」（イベント22）：セッションに持っているお題で、AI を呼ばずに始める。
+    # お題が残っていなければ（セッション切れなど）、下の通常の開始（新しいお題を生成）に進む
+    if data.get("retry") is True:
+        play = guest_play.retry_play(request.session.get(GUEST_SESSION_KEY), now=timezone.now())
+        if play is not None:
+            _save(request, play)
+            return JsonResponse(
+                {"play_id": play["id"], "play_url": guest_play.play_url(play["id"])}, status=201
+            )
 
     try:
         scenario, expressions = generate_scenario_and_expressions(

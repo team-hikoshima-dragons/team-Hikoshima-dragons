@@ -1,0 +1,120 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>シナリオ作成 | カタルAI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Zen+Maru+Gothic:wght@500;900&display=swap">
+  <link rel="stylesheet" href="{% static 'css/common.css' %}">
+  <link rel="stylesheet" href="{% static 'css/pages/account.css' %}">
+</head>
+<body>
+{% comment %}
+  画面ID: ScenarioCreate（Drive のモック scenario_create.html より）
+  送信は scenario-create.js が fetch（multipart/form-data・X-CSRFToken）で POST /scenarios/create/ に行う
+{% endcomment %}
+<div class="page">
+  {% include "partials/app_header.html" %}
+
+  <main class="main">
+    <div class="container">
+      <div class="page-head">
+        <div>
+          <h1 class="page-title">シナリオ作成</h1><!-- No.1 -->
+          <p class="page-lead">タイトルと説明を書くと、AIがキャラクター・ゴール・条件を作ってくれるよ。</p><!-- No.2 -->
+        </div>
+      </div>
+
+      <div class="create">
+        <!-- No.3 入力フォーム -->
+        <form class="card" id="create-form" method="post" enctype="multipart/form-data" novalidate>
+          {% csrf_token %}
+          <div class="field">
+            <div class="field__row">
+              <label class="field__label" for="title">タイトル <span class="req">必須</span></label><!-- No.4 -->
+              <span class="counter" data-counter-for="title" data-max="40">0 / 40</span><!-- No.6 -->
+            </div>
+            <input class="input" type="text" id="title" name="title" placeholder="例：頑固な喫茶店マスターに、閉店を30分延ばしてもらう"><!-- No.5 -->
+            <p class="field__note">シナリオ一覧に表示されます</p><!-- No.7 -->
+          </div>
+
+          <div class="field">
+            <span class="field__label" id="lv-label">難易度 <span class="req">必須</span></span><!-- No.27 -->
+            <fieldset class="seg" aria-labelledby="lv-label"><!-- No.28〜30 -->
+              <input type="radio" name="difficulty" id="lv-beginner" value="beginner"><label for="lv-beginner">初級</label>
+              <input type="radio" name="difficulty" id="lv-intermediate" value="intermediate" checked><label for="lv-intermediate">中級</label>
+              <input type="radio" name="difficulty" id="lv-advanced" value="advanced"><label for="lv-advanced">上級</label>
+            </fieldset>
+            <p class="field__note">ほかのユーザーはこの難易度で遊びます</p>
+          </div>
+
+          <div class="field">
+            <span class="field__label">キャラクター画像 <span class="opt">任意</span></span><!-- No.8 -->
+            <div class="img-picker">
+              <img id="img-preview" src="{% static 'img/silhouette.svg' %}" alt="画像プレビュー" width="96" height="96"><!-- No.9 -->
+              <div>
+                <label for="character_image" class="visually-hidden">画像を選ぶ</label>
+                <input type="file" id="character_image" name="character_image" accept=".png,.jpg,.jpeg,.webp"><!-- No.10 イベント39 -->
+                <p class="field__note">PNG・JPEG・WebP／2MBまで。選ばない場合は標準シルエットになります</p><!-- No.11 -->
+                <p class="error-text" id="img-error" role="alert" hidden></p>
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <div class="field__row">
+              <label class="field__label" for="description">シナリオの説明 <span class="req">必須</span></label><!-- No.12 -->
+              <span class="counter" data-counter-for="description" data-max="400">0 / 400</span><!-- No.14 -->
+            </div>
+            <textarea class="textarea" id="description" name="description" rows="7"
+              placeholder="例：&#10;どんな人？：開店30年の喫茶店マスター。頑固だけど常連思い。&#10;ゴール：閉店を30分延ばしてもらう&#10;条件：値引きの話はNG"></textarea><!-- No.13 -->
+            <!-- No.15 入力ヒント（イベント40） -->
+            <div class="hints">
+              <button type="button" class="hint-chip" data-hint="どんな人？：">＋どんな人？</button>
+              <button type="button" class="hint-chip" data-hint="どんな状況？：">＋どんな状況？</button>
+              <button type="button" class="hint-chip" data-hint="ゴール：">＋ゴール</button>
+              <button type="button" class="hint-chip" data-hint="条件：">＋条件</button>
+            </div>
+          </div>
+
+          <p class="alert alert--error" id="form-error" role="alert" hidden></p>
+
+          <div class="create__submit">
+            <a href="{% url 'scenarios:mine' %}" class="btn-text" id="cancel-link">キャンセル</a><!-- No.18 イベント42 -->
+            <button type="submit" class="btn btn--primary" id="generate-btn">AIでシナリオを作成</button><!-- No.16 イベント41 -->
+          </div>
+        </form>
+
+        <!-- プレビュー -->
+        <aside class="preview">
+          <h2>プレビュー</h2><!-- No.17 -->
+          <div class="card preview__card"><!-- No.19 -->
+            <div class="preview__loading" id="preview-loading" hidden>
+              <div class="spinner" aria-hidden="true"></div>AIがシナリオを作っています…
+            </div>
+            <div id="preview-body">
+              <img id="preview-img" src="{% static 'img/silhouette.svg' %}" alt="" width="120" height="120"><!-- No.20 -->
+              <p class="preview__name" id="preview-name"><span class="placeholder-text">キャラクター名</span></p><!-- No.21 -->
+              <p class="preview__title" id="preview-title"><span class="placeholder-text">タイトル</span></p><!-- No.23 -->
+              <p class="preview__author">作成：{{ user.username }}さん</p><!-- No.22 -->
+              <p class="preview__intro" id="preview-intro"><span class="placeholder-text">AIが作ったキャラクターの紹介文がここに出ます</span></p><!-- No.26 -->
+              <div class="goal-box"><!-- No.24 -->
+                <p class="goal-box__item"><span class="goal-box__tag">ゴール</span><span id="preview-goal" class="placeholder-text">—</span></p>
+                <p class="goal-box__item"><span class="goal-box__tag goal-box__tag--cond">条件</span><span id="preview-cond" class="placeholder-text">—</span></p>
+              </div>
+            </div>
+          </div>
+          <p class="preview__note">作成したシナリオは、はじめは非公開で保存されます。「作成したシナリオ」から公開できます。</p><!-- No.25 -->
+        </aside>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="{% static 'js/common.js' %}"></script>
+<script src="{% static 'js/scenario-create.js' %}"></script>
+</body>
+</html>

@@ -25,4 +25,8 @@ urlpatterns = [
     path('plays/', include('plays.urls')), 
     path('api/plays/', include('plays.api_urls')),
     path('accounts/', include('accounts.urls')),
+    path('scenarios/', include('scenarios.urls')),
 ]
+
+# アップロード画像の配信（DEBUG=True のときだけ有効。本番は nginx が配信する）
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

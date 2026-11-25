@@ -348,6 +348,7 @@ export default function ChatBox() {
                                 <div className="composer-box__row">
                                     <textarea
                                         className="textarea"
+                                        name="message"
                                         value={input}
                                         onChange={(e) => setInput(e.target.value)}
                                         onKeyDown={handleKeyDown}

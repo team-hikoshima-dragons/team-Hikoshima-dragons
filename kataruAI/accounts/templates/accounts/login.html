@@ -35,11 +35,11 @@
       <form action="#" method="post" novalidate>
         {% csrf_token %}
         {% if form.errors %}
-          <p class="alert alert--error" id="login-error" role="alert">メールアドレスかパスワードが間違っています！</p>
+          <p class="alert alert--error" id="login-error" role="alert">メールアドレスまたはパスワードが正しくありません</p>
         {% endif %}
         <div class="field">
           <label class="field__label" for="email">メールアドレス</label><!-- No.6 -->
-          <input class="input" type="email" id="email" name="email" placeholder="example@mail.com" autocomplete="email" required><!-- No.7 -->
+          <input class="input" type="email" id="email" name="email" value="{{ form.email.value|default_if_none:'' }}" placeholder="example@mail.com" autocomplete="email" required><!-- No.7 -->
         </div>
         <div class="field">
           <label class="field__label" for="password">パスワード</label><!-- No.8 -->
@@ -54,8 +54,7 @@
       </form>
 
       <div class="auth-card__links">
-        <!-- No.13 イベント19（＋α機能。作らない場合はこのリンクを消す） -->
-        <a href="#">パスワードを忘れた</a>
+        {# No.13 イベント19：パスワード再設定は＋α機能で作っていないため、設計書どおりリンクを出さない #}
         <a href="{% url 'accounts:signup' %}">新規登録はこちら</a><!-- No.14 イベント10 -->
       </div>
     </section>
@@ -63,12 +62,5 @@
 </div>
 
 <script src="{% static 'js/common.js' %}"></script>
-<script>
-  // モック用：認証失敗時の表示確認
-  if (new URLSearchParams(location.search).get("error") === "1") {
-    document.getElementById("login-error").hidden = false;
-    document.getElementById("email").value = "kataru@example.com"; // 前回入力値を保持
-  }
-</script>
 </body>
 </html>

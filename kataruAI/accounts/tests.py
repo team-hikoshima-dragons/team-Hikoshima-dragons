@@ -206,3 +206,24 @@ class SettingsTest(TestCase):
     def test_login_required(self):
         self.client.logout()
         self.assertEqual(self.post({"text_speed": "fast"}).status_code, 302)
+
+
+class LoginTest(TestCase):
+    """ユースケース記述テスト仕様書 02「認証失敗」"""
+
+    def setUp(self):
+        User.objects.create_user("a@example.com", "abcd1234")
+
+    def test_failure_keeps_email_and_shows_message(self):
+        res = self.client.post("/accounts/login/", {"email": "a@example.com", "password": "wrong999"})
+        self.assertContains(res, "メールアドレスまたはパスワードが正しくありません")
+        self.assertContains(res, 'value="a@example.com"', html=False)
+        self.assertNotContains(res, "wrong999")
+
+    def test_deleted_account_cannot_login(self):
+        User.objects.filter(email="a@example.com").update(is_active=False)
+        res = self.client.post("/accounts/login/", {"email": "a@example.com", "password": "abcd1234"})
+        self.assertContains(res, "メールアドレスまたはパスワードが正しくありません")
+
+    def test_password_reset_link_is_hidden(self):
+        self.assertNotContains(self.client.get("/accounts/login/"), "パスワードを忘れた")

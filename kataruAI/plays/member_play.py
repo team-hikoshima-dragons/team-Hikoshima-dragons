@@ -118,7 +118,7 @@ def find_play(user, play_id):
     except (TypeError, ValueError):
         pk = None
     play = (
-        Play.objects.select_related("scenario").filter(pk=pk, user=user).first()
+        Play.objects.select_related("scenario", "user").filter(pk=pk, user=user).first()
         if pk is not None else None
     )
     if play is None:
@@ -170,6 +170,7 @@ def public_view(play):
         "state": last.state_text if last else INITIAL_STATE_TEXT,
         "expression": last.expression if last else INITIAL_EXPRESSION,
         "text_speed": setting.text_speed,
+        "player_initial": play.user.username[:1],  # 自分の吹き出しのアイコン（ユーザー名の頭文字）
     }
     if play.status in (game.CLEARED, game.FAILED):
         view["result_url"] = result_url(play.pk)

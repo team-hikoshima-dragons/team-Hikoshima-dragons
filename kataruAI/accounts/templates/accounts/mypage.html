@@ -12,20 +12,13 @@
   <link rel="stylesheet" href="{% static 'css/pages/auth.css' %}">
 </head>
 <body>
-<!-- 画面ID: MyPage -->
+{% comment %}
+  画面ID: MyPage（Drive のモック mypage.html より）
+  成績（クリア数・プレイ回数・最高スコア）の表示、アカウント情報の変更（イベント37）、アカウント削除（イベント54）
+  入力の検証はサーバー（accounts/forms.py の AccountForm）で必ず行う。mypage.js の検証は使いやすさのため。
+{% endcomment %}
 <div class="page">
-  <!-- 共通ヘッダー1（Common-Header）：ログイン後の画面で使う
-       Djangoでは 。表示中の画面に aria-current="page"（下線） -->
-  <header class="header">
-    <a href="top_login.html" class="logo">カタル<span>AI</span></a><!-- No.1 イベント1 -->
-    <nav class="gnav" aria-label="メインメニュー">
-      <a href="top_login.html" class="gnav__item">ホーム</a><!-- No.2 イベント1 -->
-      <a href="scenario_list.html" class="gnav__item">シナリオ一覧</a><!-- No.3 イベント2 -->
-      <a href="play_history.html" class="gnav__item">プレイ履歴</a><!-- No.4 イベント3 -->
-      <a href="mypage.html" class="gnav__item" aria-current="page"><span class="avatar">K</span><span class="gnav__label">マイページ</span></a><!-- No.5 イベント4 -->
-      
-    </nav>
-  </header>
+  {% include "partials/app_header.html" with current="mypage" %}
 
   <main class="main">
     <div class="container container--narrow">
@@ -33,39 +26,39 @@
       <!-- No.1 プロフィールカード -->
       <section class="card card--ink">
         <div class="profile">
-          <span class="avatar avatar--l">K</span><!-- No.2 -->
+          <span class="avatar avatar--l">{{ user.username|slice:":1" }}</span><!-- No.2 -->
           <div>
-            <h1 class="profile__name">Kさん</h1><!-- No.3 -->
-            <p class="profile__since">はじめたのは 2026/10/01</p><!-- No.4 -->
+            <h1 class="profile__name">{{ user.username }}さん</h1><!-- No.3 -->
+            <p class="profile__since">はじめたのは {{ user.create_at|date:"Y/m/d" }}</p><!-- No.4 -->
           </div>
           <div class="profile__stats">
-            <p class="profile__stat"><span>クリア数</span><span>12</span></p><!-- No.5・6 -->
-            <p class="profile__stat"><span>プレイ回数</span><span>20</span></p><!-- No.7・8 -->
-            <p class="profile__stat"><span>最高スコア</span><span>920</span></p><!-- No.9・10 -->
+            <p class="profile__stat"><span>クリア数</span><span>{{ stats.clear_count }}</span></p><!-- No.5・6 -->
+            <p class="profile__stat"><span>プレイ回数</span><span>{{ stats.play_count }}</span></p><!-- No.7・8 -->
+            <p class="profile__stat"><span>最高スコア</span><span>{{ stats.best_score }}</span></p><!-- No.9・10 -->
           </div>
         </div>
         <div class="profile__links">
-          <a href="my_scenarios.html" class="btn btn--s">作成したシナリオ</a><!-- No.11 イベント35 -->
-          <a href="settings.html" class="btn btn--s">ゲーム設定</a><!-- No.12 イベント7 -->
+          <a href="/scenarios/mine/" class="btn btn--s">作成したシナリオ</a><!-- No.11 イベント35 -->
+          <a href="{% url 'accounts:settings' %}" class="btn btn--s">ゲーム設定</a><!-- No.12 イベント7 -->
         </div>
       </section>
 
       <h2 class="section-title">アカウント情報</h2><!-- No.13 -->
 
-      <!-- 本番：method="post" ＋ {% csrf_token %}（イベント37） -->
-      <form id="account-form" novalidate>
+      <form id="account-form" method="post" novalidate>
+        {% csrf_token %}
         <!-- No.14 プロフィール枠 -->
         <section class="card form-card">
           <h3>プロフィール</h3><!-- No.15 -->
           <div class="form-grid">
             <div class="field">
               <label class="field__label" for="username">ユーザー名 <span class="req">必須</span></label><!-- No.16 -->
-              <input class="input" type="text" id="username" name="username" value="Kさん" maxlength="20"><!-- No.17 -->
+              <input class="input{% if form.username.errors %} is-error{% endif %}" type="text" id="username" name="username" value="{{ form.username.value|default_if_none:'' }}" maxlength="20"><!-- No.17 -->
               <p class="field__note">ランキングに表示されます</p><!-- No.20 -->
             </div>
             <div class="field">
               <label class="field__label" for="email">メールアドレス <span class="req">必須</span></label><!-- No.18 -->
-              <input class="input" type="email" id="email" name="email" value="kataru@example.com" autocomplete="email"><!-- No.19 -->
+              <input class="input{% if form.email.errors %} is-error{% endif %}" type="email" id="email" name="email" value="{{ form.email.value|default_if_none:'' }}" autocomplete="email" data-initial="{{ user.email }}"><!-- No.19 -->
               <p class="field__note">変えるときは「今のパスワード」も入力してね</p>
             </div>
           </div>
@@ -77,23 +70,32 @@
           <div class="form-grid">
             <div class="field">
               <label class="field__label" for="current_password">今のパスワード</label><!-- No.24 -->
-              <input class="input" type="password" id="current_password" name="current_password" autocomplete="current-password"><!-- No.25 初期値は空 -->
+              <input class="input{% if form.current_password.errors %} is-error{% endif %}" type="password" id="current_password" name="current_password" autocomplete="current-password"><!-- No.25 初期値は空 -->
             </div>
             <div></div>
             <div class="field">
               <label class="field__label" for="new_password">新しいパスワード</label><!-- No.26 -->
-              <input class="input" type="password" id="new_password" name="new_password" autocomplete="new-password"><!-- No.27 -->
+              <input class="input{% if form.new_password.errors %} is-error{% endif %}" type="password" id="new_password" name="new_password" autocomplete="new-password"><!-- No.27 -->
             </div>
             <div class="field">
               <label class="field__label" for="new_password_confirm">新しいパスワード（確認）</label><!-- No.28 -->
-              <input class="input" type="password" id="new_password_confirm" name="new_password_confirm" autocomplete="new-password"><!-- No.29 -->
+              <input class="input{% if form.new_password_confirm.errors %} is-error{% endif %}" type="password" id="new_password_confirm" name="new_password_confirm" autocomplete="new-password"><!-- No.29 -->
             </div>
           </div>
           <p class="field__note form-card__note">8文字以上で、英字と数字を両方入れてね。</p><!-- No.30 -->
         </section>
 
         <div class="form-actions">
+          {% if first_error %}
+          {# 最初のエラーを1つだけ表示する #}
+          <p class="alert alert--error" id="form-message" role="alert">{{ first_error }}</p>
+          {% elif messages %}
+          {% for message in messages %}
+          <p class="alert {% if message.tags == 'error' %}alert--error{% else %}alert--success{% endif %}" id="form-message" role="alert">{{ message }}</p>
+          {% endfor %}
+          {% else %}
           <p class="alert" id="form-message" role="alert" hidden></p>
+          {% endif %}
           <button type="reset" class="btn">元に戻す</button><!-- No.31 イベント36 -->
           <button type="submit" class="btn btn--primary">保存する</button><!-- No.32 イベント37 -->
         </div>
@@ -114,20 +116,20 @@
 <!-- O1 アカウント削除確認オーバーレイ（No.37〜41）：ログアウトと同じ部品 -->
 <div class="overlay" id="overlay-delete" hidden>
   <div class="modal" role="alertdialog" aria-modal="true" aria-labelledby="delete-title"><!-- No.37 -->
-    <img class="modal__mascot" src="../static/img/katarun.svg" alt="" width="88" height="82">
+    <img class="modal__mascot" src="{% static 'img/katarun.svg' %}" alt="" width="88" height="82">
     <h3 class="modal__title" id="delete-title">アカウントを削除しますか？</h3><!-- No.38 -->
     <p class="modal__text">この操作は取り消せません。プレイ履歴・作成したシナリオ・お気に入りがすべて消えます。</p><!-- No.39 -->
     <div class="modal__actions">
       <button type="button" class="btn" data-close>キャンセル</button><!-- No.40 イベント53 -->
-      <!-- No.41 イベント54：本番は POST ＋ {% csrf_token %} -->
-      <form action="top_nologin.html" method="get">
+      <form action="{% url 'accounts:delete' %}" method="post"><!-- No.41 イベント54 -->
+        {% csrf_token %}
         <button type="submit" class="btn btn--danger">削除する</button>
       </form>
     </div>
   </div>
 </div>
 
-<script src="../static/js/common.js"></script>
-<script src="../static/js/mypage.js"></script>
+<script src="{% static 'js/common.js' %}"></script>
+<script src="{% static 'js/mypage.js' %}"></script>
 </body>
 </html>

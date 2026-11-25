@@ -1,0 +1,73 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>設定 | カタルAI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Zen+Maru+Gothic:wght@500;900&display=swap">
+  <link rel="stylesheet" href="{% static 'css/common.css' %}">
+  <link rel="stylesheet" href="{% static 'css/pages/account.css' %}">
+</head>
+<body>
+{% comment %}
+  画面ID: Settings（Drive のモック settings.html より）
+  変更したらすぐ保存する（非同期通信。イベント47・48）。保存先は POST /accounts/settings/（settings.js）
+{% endcomment %}
+<div class="page">
+  {% include "partials/app_header.html" with current="mypage" %}
+
+  <main class="main">
+    <div class="container container--narrow">
+      <a href="{% url 'accounts:mypage' %}" class="back-link">← マイページに戻る</a><!-- No.2 イベント4 -->
+      <div class="page-head">
+        <div>
+          <h1 class="page-title">設定</h1><!-- No.3 -->
+          <p class="page-lead">変更はすぐに保存されます</p><!-- No.4 -->
+        </div>
+      </div>
+
+      <!-- No.5 設定カード -->
+      <section class="card">
+        <h2 class="visually-hidden">一般</h2><!-- No.6 -->
+
+        <div class="setting">
+          <div>
+            <p class="setting__title">テキスト速度</p><!-- No.7 -->
+            <p class="setting__note">相手のセリフが表示される速さ</p><!-- No.8 -->
+            <div class="sample"><!-- No.13 見本テキスト -->
+              <span class="sample__tag">見本</span>
+              <p class="sample__text" id="sample-text"></p>
+            </div>
+          </div>
+          <!-- No.9〜12 テキスト速度（イベント47） -->
+          <fieldset class="seg" id="speed">
+            <legend class="visually-hidden">テキスト速度</legend>
+            <input type="radio" name="text_speed" id="speed-slow" value="slow"{% if setting.text_speed == "slow" %} checked{% endif %}><label for="speed-slow">ゆっくり</label>
+            <input type="radio" name="text_speed" id="speed-normal" value="normal"{% if setting.text_speed == "normal" %} checked{% endif %}><label for="speed-normal">ふつう</label>
+            <input type="radio" name="text_speed" id="speed-fast" value="fast"{% if setting.text_speed == "fast" %} checked{% endif %}><label for="speed-fast">はやい</label>
+          </fieldset>
+        </div>
+
+        <div class="setting">
+          <div>
+            <label class="setting__title" for="auto-save">チャット履歴の自動保存</label><!-- No.14 -->
+            <p class="setting__note">オフにすると、プレイ履歴に会話の中身が残りません（スコアは残ります）</p><!-- No.15 -->
+          </div>
+          <!-- No.16 自動保存トグル（イベント48） -->
+          <label class="switch">
+            <input type="checkbox" id="auto-save" name="auto_save_chat" value="1"{% if setting.auto_save_chat %} checked{% endif %}>
+            <span class="switch__slider" aria-hidden="true"></span>
+          </label>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<script src="{% static 'js/common.js' %}"></script>
+<script src="{% static 'js/settings.js' %}"></script>
+</body>
+</html>

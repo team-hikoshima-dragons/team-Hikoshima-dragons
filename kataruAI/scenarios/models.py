@@ -6,12 +6,12 @@ import secrets
 
 class Scenario(models.Model):
     class Kind(models.TextChoices):
-        CREATE = 'CREATE',  '作成シナリオ'
-        NOT_CREATE = 'NOT_CREATE', 'シナリオ'
+        RANDOM = 'random', 'ランダムなお題'
+        USER = 'user', 'ユーザー作成'
     class Level(models.TextChoices):
-        BEGINNER = 'BEGINNER', '初級'
-        INTERMEDIATE = 'INTERMEDIATE', '中級'
-        ADVANCED = 'ADVANCED', '上級'
+        BEGINNER = 'beginner', '初級'
+        INTERMEDIATE = 'intermediate', '中級'
+        ADVANCED = 'advanced', '上級'
     def create_share_number():
         while True:
             # 8桁のランダムな数字文字列を生成（例: "04829104"）
@@ -19,22 +19,21 @@ class Scenario(models.Model):
             # DBに同じ値が既に存在しないか確認
             if not Scenario.objects.filter(share_code=code).exists():
                 return code
-    creatoe = models.ForeignKey(
+    creator = models.ForeignKey(
+        # ランダムなお題＝プレイしたユーザー、ユーザー作成＝作成したユーザー
         User,
         verbose_name="作成者",
-        on_delete=models.CASCADE
+        on_delete=models.PROTECT
     )
     kind = models.CharField(
-        verbose_name="種別(人が作ったか作ってないか)",
+        verbose_name="種別(ランダムなお題かユーザー作成か)",
         max_length=10,
         choices=Kind.choices,
-        default=Kind.NOT_CREATE
     )
     difficulty = models.CharField(
         verbose_name="難易度",
         max_length=12,
         choices=Level.choices,
-        default=Level.INTERMEDIATE
     )
     title = models.CharField(
         verbose_name="タイトル",
@@ -67,7 +66,7 @@ class Scenario(models.Model):
         blank=True    
         )
     # ============================
-    image = models.TextField( # SVGで生成
+    image = models.TextField( # NULL＝標準シルエット
         verbose_name="キャラクター画像",
         null=True,
         blank=True
@@ -88,14 +87,47 @@ class Scenario(models.Model):
         verbose_name="作成日時",
         auto_now_add=True
     )
-    update_at = models.DateTimeField(
+    updated_at = models.DateTimeField(
         verbose_name="更新日時",
-        auto_now_add=True
+        auto_now=True
     )
-    delete_at = models.DateTimeField(
+    deleted_at = models.DateTimeField(
+        # NULL＝有効。論理削除のときに日時を入れる
         verbose_name="削除日時",
-        auto_now_add=True
+        null=True,
+        blank=True
     )
+
+
+class ScenarioExpression(models.Model):
+    # ランダムなお題の表情差分SVG（サニタイズ済み）
+    class Expression(models.TextChoices):
+        NORMAL = 'normal', '通常'
+        HAPPY = 'happy', 'うれしい'
+        ANGRY = 'angry', '怒り'
+        DOUBT = 'doubt', '疑い'
+    scenario = models.ForeignKey(
+        Scenario,
+        verbose_name="シナリオ",
+        on_delete=models.CASCADE,
+        related_name="expressions"
+    )
+    expression = models.CharField(
+        verbose_name="表情",
+        max_length=10,
+        choices=Expression.choices,
+    )
+    svg = models.TextField(
+        verbose_name="表情SVG(サニタイズ済み)",
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["scenario", "expression"],
+                name="unique_scenario_expression",
+            ),
+        ]
 
 class Favorite(models.Model):
     user = models.ForeignKey(
@@ -111,3 +143,11 @@ class Favorite(models.Model):
     created_at = models.DateTimeField(
         auto_now_add=True
     )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "scenario"],
+                name="unique_favorite_user_scenario",
+            ),
+        ]

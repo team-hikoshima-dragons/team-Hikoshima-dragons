@@ -26,7 +26,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ["DJANGO_SECRET_KEY"]
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# 開発環境は .env に DJANGO_DEBUG=1（True でも可）を書く（書かなければ False＝本番向け）
+DEBUG = os.environ.get("DJANGO_DEBUG", "0").lower() in ("1", "true", "yes")
 
 ALLOWED_HOSTS = os.environ.get(
     "DJANGO_ALLOWED_HOSTS", "localhost,0.0.0.0,127.0.0.1"
@@ -48,7 +49,7 @@ INSTALLED_APPS = [
     'scenarios',
 ]
 
-LOGIN_REDIRECT_URL = "kataruAI:Lindex"
+LOGIN_REDIRECT_URL = "kataruAI:index"
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

@@ -3,8 +3,8 @@ from .models import *
 # Register your models here.
 @admin.register(Scenario)
 class ScenarioAdmin(admin.ModelAdmin):
-    list_display = ("creatoe", "kind", "difficulty", "title", "description", "character_name", "character_intro", "goal", "condition", "is_public", "share_code", "created_at")
-    search_fields = ("creatoe",)
+    list_display = ("creator", "kind", "difficulty", "title", "description", "character_name", "character_intro", "goal", "condition", "is_public", "share_code", "created_at")
+    search_fields = ("creator",)
 
 @admin.register(Favorite)
 class FavoriteAdmin(admin.ModelAdmin):

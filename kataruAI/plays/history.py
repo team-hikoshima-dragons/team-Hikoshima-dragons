@@ -9,11 +9,16 @@ Drive のモック play_history.html・play_history_detail.html
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.shortcuts import redirect, render
+from django.templatetags.static import static
 from django.urls import reverse_lazy
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_GET
 
+from scenarios.images import image_url
+from scenarios.models import Scenario
+
 from . import game
+from .member_play import expression_images
 from .guest_play import DIFFICULTY_LABELS, play_url
 from .models import Play
 
@@ -24,8 +29,14 @@ LOGIN_URL = reverse_lazy("accounts:login")
 NOT_FOUND_MESSAGE = "指定された履歴データが見つかりません"
 
 
-def _face(expression):
-    return f"img/face-{expression or 'normal'}.svg"
+def _face_url(scenario, expression, images=None):
+    """顔の画像URL：ユーザー作成は登録画像、ランダムは生成した表情 SVG、どちらもなければ固定の SVG"""
+    if scenario.kind == Scenario.Kind.USER:
+        return image_url(scenario)
+    expression = expression or "normal"
+    if images:
+        return images[expression]
+    return static(f"img/face-{expression}.svg")
 
 
 def _row(play):
@@ -34,7 +45,8 @@ def _row(play):
     return {
         "play": play,
         "url": play_url(play.pk) if play.status == game.PLAYING else f"/plays/history/{play.pk}/",
-        "face_path": _face(last.expression if last else None),
+        "face_url": _face_url(play.scenario, last.expression if last else None,
+                              expression_images(play.scenario)),
         "difficulty": difficulty,
         "difficulty_label": DIFFICULTY_LABELS[difficulty],
     }
@@ -100,19 +112,20 @@ def history_detail(request, play_id):
     if play.status == game.PLAYING:
         return redirect(play_url(play.pk))  # プレイ中は続きから再開
     turns = list(play.turns.order_by("turn_no"))
+    images = expression_images(play.scenario)
     messages = []
     for turn in turns:
         if turn.user_message is not None:
             messages.append({"role": "user", "text": turn.user_message})
         if turn.ai_reply is not None:
-            messages.append({"role": "model", "text": turn.ai_reply, "face_path": _face(turn.expression)})
+            messages.append({"role": "model", "text": turn.ai_reply, "face_url": _face_url(play.scenario, turn.expression, images)})
     difficulty = play.scenario.difficulty
     return render(request, "plays/history_detail.html", {
         "play": play,
         "cleared": play.status == game.CLEARED,
         "difficulty": difficulty,
         "difficulty_label": DIFFICULTY_LABELS[difficulty],
-        "face_path": "img/face-happy.svg" if play.status == game.CLEARED else "img/face-angry.svg",
+        "face_url": _face_url(play.scenario, "happy" if play.status == game.CLEARED else "angry", images),
         "messages_log": messages,
         "timeline": _timeline(turns),
         "key_turn": _key_turn(turns),

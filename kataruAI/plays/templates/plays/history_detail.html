@@ -27,7 +27,7 @@
         <div>
           <!-- No.2 結果全体 -->
           <section class="card hd__summary">
-            <span class="face face--l"><img src="{% static face_path %}" alt="{{ play.scenario.character_name }}"></span><!-- No.3 -->
+            <span class="face face--l"><img src="{{ face_url }}" alt="{{ play.scenario.character_name }}"></span><!-- No.3 -->
             <div>
               <div class="row__meta">
                 {% if cleared %}<span class="badge badge--clear">✓ クリア</span>{% else %}<span class="badge badge--fail">× 失敗</span>{% endif %}<!-- No.4 -->
@@ -54,7 +54,7 @@
               </div>
               {% else %}
               <div class="talk__row talk__row--opp">
-                <span class="talk__icon"><img src="{% static m.face_path %}" alt=""></span><!-- No.11 -->
+                <span class="talk__icon"><img src="{{ m.face_url }}" alt=""></span><!-- No.11 -->
                 <p class="talk__bubble">{{ m.text }}</p><!-- No.12 -->
               </div>
               {% endif %}

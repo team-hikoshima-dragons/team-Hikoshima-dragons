@@ -55,6 +55,9 @@ const SPEED_MS = { slow: 90, normal: 45, fast: 15 }
 
 // 表情の画像は Django の static から配る
 const faceSrc = (expression) => `/static/img/face-${expression}.svg`
+// 顔の画像：ユーザー作成シナリオは登録画像1枚、ランダムなお題は生成した表情差分 SVG、なければ固定の SVG
+const faceOf = (play, expression) =>
+    play.image_url || (play.expression_images && play.expression_images[expression]) || faceSrc(expression)
 
 // 相手のセリフを、テキスト速度に合わせて1文字ずつ表示する（新しく届いた返答だけに使う）
 function TypingText({ text, speed }) {
@@ -274,7 +277,7 @@ export default function ChatBox() {
                     <div className="opp__profile">
                         <div className="opp__face" data-mood={expression}>
                             {/* ユーザー作成シナリオは登録画像1枚のまま（様子は文字と枠の色で伝える。設計書【表情】） */}
-                            <img src={play.image_url || faceSrc(expression)} alt={`${name}の表情`} width="150" height="150" />
+                            <img src={faceOf(play, expression)} alt={`${name}の表情`} width="150" height="150" />
                         </div>
                         <h2 className="opp__name">{name}</h2>
                         <p className="opp__desc">{play.character.intro}</p>
@@ -302,7 +305,7 @@ export default function ChatBox() {
                                 ) : (
                                     <div key={i} className="talk__row talk__row--opp">
                                         <span className="talk__icon">
-                                            <img src={play.image_url || faceSrc(i === lastModelIndex ? expression : 'normal')} alt="" />
+                                            <img src={faceOf(play, i === lastModelIndex ? expression : 'normal')} alt="" />
                                         </span>
                                         <p className="talk__bubble">
                                             {m.typing ? <TypingText text={m.text} speed={play.text_speed} /> : m.text}

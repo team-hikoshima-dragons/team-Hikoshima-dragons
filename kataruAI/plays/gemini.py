@@ -384,3 +384,48 @@ def generate_reply(scenario, difficulty, history, user_text, state=None):
     # 今回の発言を最後に足す
     contents.append({"role": "user", "parts": [{"text": user_text}]})
     return validate_turn(_call(turn_instruction(scenario, difficulty, state), contents, TURN_SCHEMA))
+
+
+# ---------------------------------------------------------------
+# 表情差分 SVG（ランダムなお題。ユースケース記述「ゲームを開始する」②・【表情】）
+# お題の生成と並行して呼ぶので、お題の内容は知らない。難易度に合った汎用の人物の顔を作らせる。
+# ---------------------------------------------------------------
+EXPRESSION_SCHEMA = {
+    "type": "OBJECT",
+    "properties": {name: _S for name in EXPRESSIONS},
+    "required": list(EXPRESSIONS),
+}
+
+
+def expression_instruction(difficulty):
+    style = DIFFICULTY_STYLE.get(str(difficulty).lower(), DIFFICULTY_STYLE["intermediate"])
+    return (
+        "あなたは、会話ゲームのキャラクターの顔アイコンを SVG で描く係です。"
+        "同じ1人の人物の顔を、4つの表情で描いてください。\n"
+        "- normal：ふつう／happy：うれしい（笑顔）／angry：怒っている／doubt：疑っている（眉をひそめる）\n"
+        "- 4つとも、輪郭・髪型・色は同じにし、目・眉・口だけを変える\n"
+        '- それぞれ <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"> で始まる1つの SVG にする\n'
+        "- 必ずこの順番で描く（後に書いたものが上に重なる）：\n"
+        "  1. 顔の輪郭：中心(50,55)の楕円（横の半径30・縦の半径35くらい）を肌色（#f5d0b1 など明るい色）で塗る\n"
+        "  2. 髪：頭の上側だけ（y が 45 より上）に描く。顔の中央（目・鼻・口のあたり）は絶対に髪で覆わない\n"
+        "  3. 眉・目・口：髪より後に描き、濃い色（#222222 など）で、顔の上にはっきり見えるようにする\n"
+        "- 使ってよい要素は g・circle・ellipse・rect・path・line・polyline・polygon だけ。"
+        "text・image・script・style・グラデーション・外部参照は使わない\n"
+        "- 色は #RRGGBB で直接書く。1つの SVG は 2000 文字以内のシンプルなイラストにする\n"
+        f"人物の雰囲気（手ごわさ）：{style}"
+    )
+
+
+def generate_expressions(difficulty):
+    """4表情のサニタイズ済み SVG を {表情: SVG文字列} で返す。1つでも使えなければ AI_ERROR。"""
+    from .svg_sanitize import sanitize_svg
+
+    contents = [{"role": "user", "parts": [{"text": "顔アイコンを4つ描いてください。"}]}]
+    data = _call(expression_instruction(difficulty), contents, EXPRESSION_SCHEMA)
+    result = {}
+    for name in EXPRESSIONS:
+        svg = sanitize_svg(data.get(name))
+        if svg is None:
+            raise GeminiError("AI_ERROR", f"invalid svg: {name}")
+        result[name] = svg
+    return result

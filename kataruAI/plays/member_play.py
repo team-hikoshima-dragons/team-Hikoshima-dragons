@@ -15,9 +15,10 @@ from django.utils import timezone
 
 from accounts.models import User, UserSetting
 from scenarios.images import image_url
-from scenarios.models import Scenario
+from scenarios.models import Scenario, ScenarioExpression
 
 from . import game
+from .expressions import generate_scenario_and_expressions, image_urls
 from .gemini import GeminiError
 from .guest_play import (
     DIFFICULTY_LABELS,
@@ -35,16 +36,22 @@ AI_ERROR_MESSAGE = "通信エラーが発生しました。もう一度ためし
 
 
 # ---------- 作成 ----------
-def start_random(user, difficulty, generate_scenario):
+def start_random(user, difficulty, generate_scenario, generate_expressions=None):
     """ランダムなお題で開始する（画面設計書 イベント12）。
 
-    generate_scenario : gemini.generate_scenario と同じ引数の関数（テストで差し替えられるように）
+    generate_scenario    : gemini.generate_scenario と同じ引数の関数（テストで差し替えられるように）
+    generate_expressions : gemini.generate_expressions と同じ引数の関数。None なら表情 SVG は作らない
     """
     if not isinstance(difficulty, str) or difficulty not in game.RULES:
         raise PlayError("BAD_REQUEST", "難易度を選んでください。", 400)
     # ① AIでお題を作る（トランザクションの外。失敗したら前のプレイはそのまま＝②-a）
     try:
-        data = generate_scenario(difficulty)
+        if generate_expressions is None:
+            data, expressions = generate_scenario(difficulty), None
+        else:
+            data, expressions = generate_scenario_and_expressions(
+                difficulty, generate_scenario, generate_expressions
+            )
     except GeminiError:
         raise PlayError("AI_ERROR", "お題を作れませんでした。もう一度ためしてね。", 502)
     # ② 成功したら、シナリオ（ランダム・非公開）を保存して、プレイを作る
@@ -57,7 +64,20 @@ def start_random(user, difficulty, generate_scenario):
             share_code=None,  # 共有コードはユーザーが作成したシナリオだけに発行する
             **{key: data[key] for key in SCENARIO_KEYS},
         )
+        # 表情差分 SVG（サニタイズ済み）。生成に失敗したときは保存しない（固定の SVG を使う）
+        if expressions:
+            ScenarioExpression.objects.bulk_create([
+                ScenarioExpression(scenario=scenario, expression=name, svg=svg)
+                for name, svg in expressions.items()
+            ])
         return _create_play(user, scenario)
+
+
+def expression_images(scenario):
+    """ランダムなお題の表情 {表情: data URL}。なければ None（固定の SVG を使う）"""
+    if scenario.kind != Scenario.Kind.RANDOM:
+        return None
+    return image_urls({e.expression: e.svg for e in scenario.expressions.all()})
 
 
 def start_with_scenario(user, scenario_id):
@@ -175,6 +195,8 @@ def public_view(play):
         "player_initial": play.user.username[:1],  # 自分の吹き出しのアイコン（ユーザー名の頭文字）
         # ユーザー作成シナリオは登録画像（なければ標準シルエット）を使う。ランダムなお題は表情のSVG
         "image_url": image_url(scenario) if scenario.kind == Scenario.Kind.USER else None,
+        # ランダムなお題の表情差分 SVG（ターンごとに expression で差し替える）
+        "expression_images": expression_images(scenario),
     }
     if play.status in (game.CLEARED, game.FAILED):
         view["result_url"] = result_url(play.pk)
@@ -334,13 +356,22 @@ def result_view(play):
         "clear_time_text": "—" if seconds is None else f"{seconds // 60}:{seconds % 60:02d}",
         "face_path": "img/face-happy.svg" if cleared else "img/face-angry.svg",
         # ユーザー作成シナリオは登録画像を出す（None ならテンプレートが face_path を使う）
-        "image_url": image_url(play.scenario) if play.scenario.kind == Scenario.Kind.USER else None,
+        "image_url": _result_image(play, cleared),
         "today_rank": today_rank(play),
         "new_best": is_new_best(play),
         # もう一度挑戦する（イベント22）：同じシナリオ。削除済みならボタンを無効化する
         "scenario_id": play.scenario_id,
         "can_retry": play.scenario.deleted_at is None,
     }
+
+
+def _result_image(play, cleared):
+    """リザルトの顔：ユーザー作成は登録画像、ランダムは生成した表情（クリア＝うれしい、失敗＝怒り）。
+    どちらもなければ None（テンプレートが固定の face_path を使う）"""
+    if play.scenario.kind == Scenario.Kind.USER:
+        return image_url(play.scenario)
+    images = expression_images(play.scenario)
+    return images["happy" if cleared else "angry"] if images else None
 
 
 def start_payload(play):

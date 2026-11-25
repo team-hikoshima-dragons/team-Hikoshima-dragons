@@ -25,6 +25,14 @@ def reply(delta=(5, -5, 10)):
 
 
 class ApiTest(TestCase):
+    def setUp(self):
+        super().setUp()
+        # 表情 SVG の生成は本物の Gemini を呼ばない（失敗扱い＝固定の SVG で始まる）
+        patcher = mock.patch("plays.api.gemini.generate_expressions",
+                             side_effect=GeminiError("AI_ERROR"))
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
     def post(self, url, body=None):
         return self.client.post(url, data=json.dumps(body or {}), content_type="application/json")
 

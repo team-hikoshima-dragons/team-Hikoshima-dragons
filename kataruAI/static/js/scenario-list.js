@@ -1,5 +1,6 @@
 /* シナリオ一覧・お気に入り一覧
-   - 詳細オーバーレイ（イベント27）：押した行の data-* を textContent で入れる
+   - 詳細オーバーレイ（イベント27）：押した行の data-* をすぐ入れてから、
+     GET /scenarios/{id}/ で最新の内容を取り直す（削除・非公開になっていたらメッセージを出す）
    - お気に入りの登録・解除（イベント28）：POST /scenarios/{id}/favorite/。失敗したら元に戻す
    - 開始（イベント29）：POST /api/plays/ に scenario_id を送り、プレイ画面へ
    - コード検索（イベント52）：GET /scenarios/code/{code}/ */
@@ -55,6 +56,8 @@
     $("detail-cond").textContent = d.cond;
     $("detail-face").src = d.image;
     $("detail-error").hidden = true;
+    $("detail-start").disabled = false;
+    $("detail-fav").disabled = false;
     setFavButton(d.fav === true || d.fav === "true");
   }
 
@@ -62,11 +65,26 @@
     // data-open のクリックで common.js が開く。その前にデータを入れる（capture で先に動かす）
     row.addEventListener("click", function () {
       fillDetail(Object.assign({}, row.dataset));
+      refreshDetail(row.dataset.id);
     }, true);
     row.addEventListener("keydown", function (e) {
       if (e.key === "Enter" && e.target === row) row.click();
     });
   });
+
+  // 詳細を開いたときに、サーバーから最新の内容を取り直す（テスト仕様書 11）
+  function refreshDetail(id) {
+    request("GET", "/scenarios/" + Number(id) + "/").then(function (data) {
+      if (current && String(current.id) === String(id)) fillDetail(data);
+    }).catch(function (err) {
+      if (!current || String(current.id) !== String(id)) return;
+      // 存在しない・削除済み・非公開：メッセージを出し、遊ぶ・お気に入りのボタンを押せなくする
+      $("detail-error").textContent = err.message;
+      $("detail-error").hidden = false;
+      $("detail-start").disabled = true;
+      $("detail-fav").disabled = true;
+    });
+  }
 
   /* ---------- お気に入り（一覧の★と詳細のボタン） ---------- */
   function rowOf(id) {

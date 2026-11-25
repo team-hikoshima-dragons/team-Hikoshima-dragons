@@ -311,3 +311,23 @@ def find_by_code(request, code):
         return _error("NOT_FOUND", "そのコードのシナリオは見つかりません", 404)
     favorited = Favorite.objects.filter(user=request.user, scenario=scenario).exists()
     return JsonResponse(detail_data(request.user, scenario, favorited))
+
+
+@login_required(login_url=LOGIN_URL)
+@require_GET
+def detail(request, scenario_id):
+    """シナリオ詳細（ユースケース記述「シナリオ詳細画面を表示する」、テスト仕様書 11）
+
+    見せてよいのは、プレイ開始と同じ条件のシナリオだけ：ユーザー作成・未削除で、公開中または作成者本人。
+    それ以外（存在しない・削除済み・他人の非公開）は区別せず NOT_FOUND（存在を隠す）。
+    """
+    scenario = (
+        with_counts(Scenario.objects.filter(kind=Scenario.Kind.USER, deleted_at__isnull=True))
+        .select_related("creator")
+        .filter(Q(is_public=True) | Q(creator=request.user), pk=scenario_id)
+        .first()
+    )
+    if scenario is None:
+        return _error("NOT_FOUND", NOT_FOUND_SCENARIO, 404)
+    favorited = Favorite.objects.filter(user=request.user, scenario=scenario).exists()
+    return JsonResponse(detail_data(request.user, scenario, favorited))

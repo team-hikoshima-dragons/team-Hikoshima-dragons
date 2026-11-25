@@ -8,6 +8,7 @@ urlpatterns = [
     path("", views.browse, name="list"),
     path("favorites/", views.favorites, name="favorites"),
     path("code/<str:code>/", views.find_by_code, name="find_by_code"),
+    path("<int:scenario_id>/", views.detail, name="detail"),
     path("<int:scenario_id>/favorite/", views.toggle_favorite, name="toggle_favorite"),
     path("create/", views.create, name="create"),
     path("mine/", views.mine, name="mine"),

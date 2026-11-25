@@ -1,0 +1,81 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ランキング | カタルAI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Zen+Maru+Gothic:wght@500;900&display=swap">
+  <link rel="stylesheet" href="{% static 'css/common.css' %}">
+  <link rel="stylesheet" href="{% static 'css/pages/list.css' %}">
+</head>
+<body>
+{% comment %} 画面ID: Ranking（Drive のモック ranking.html より）。期間・難易度は ?period=...&difficulty=... で再読み込み（イベント43） {% endcomment %}
+<div class="page">
+  {% include "partials/app_header.html" %}
+
+  <main class="main">
+    <div class="container container--narrow">
+      <div class="page-head">
+        <div>
+          <h1 class="page-title">ランキング</h1><!-- No.2 -->
+          <p class="page-lead">期間内にランダムなお題をクリアしたスコアの合計で順位が決まります</p><!-- No.3 -->
+        </div>
+      </div>
+
+      <form class="rank-filters" method="get">
+        <input type="hidden" name="difficulty" value="{{ difficulty }}">
+        <div class="rank-filters__row">
+          <span class="rank-filters__label">期間</span>
+          <div class="seg" role="group" aria-label="期間"><!-- No.4〜9 -->
+            {% for value, label in periods %}
+            <button type="submit" class="seg__btn" name="period" value="{{ value }}" aria-pressed="{% if value == period %}true{% else %}false{% endif %}">{{ label }}</button>
+            {% endfor %}
+          </div>
+        </div>
+      </form>
+      <form class="rank-filters" method="get">
+        <input type="hidden" name="period" value="{{ period }}">
+        <div class="rank-filters__row">
+          <span class="rank-filters__label">難易度</span><!-- No.24 -->
+          <div class="seg" role="group" aria-label="難易度"><!-- No.20〜23 -->
+            {% for value, label in difficulties %}
+            <button type="submit" class="seg__btn" name="difficulty" value="{{ value }}" aria-pressed="{% if value == difficulty %}true{% else %}false{% endif %}">{{ label }}</button>
+            {% endfor %}
+          </div>
+        </div>
+      </form>
+
+      <!-- No.10 ランキング表：上位50位まで。自分が51位以下なら最後に自分の行を足す -->
+      <table class="rank-table">
+        <thead>
+          <tr>
+            <th scope="col">順位</th>
+            <th scope="col">プレイヤー</th>
+            <th scope="col" class="num">クリア数</th>
+            <th scope="col" class="num">合計スコア</th>
+          </tr>
+        </thead>
+        {% if rows %}
+        <tbody id="rank-body">
+          {% for row in rows %}
+          {% include "plays/ranking_row.html" %}
+          {% endfor %}
+          {% if me_below %}{% with row=me_below %}{% include "plays/ranking_row.html" %}{% endwith %}{% endif %}
+        </tbody>
+        {% else %}
+        <!-- No.25 データ0件のとき -->
+        <tbody id="rank-empty">
+          <tr class="rank-empty"><td colspan="4">この期間のランキングデータはまだありません</td></tr>
+        </tbody>
+        {% endif %}
+      </table>
+    </div>
+  </main>
+</div>
+
+<script src="{% static 'js/common.js' %}"></script>
+</body>
+</html>

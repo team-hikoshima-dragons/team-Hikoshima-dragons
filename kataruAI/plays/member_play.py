@@ -8,8 +8,9 @@
   - チャット履歴の自動保存が OFF のプレイは、プレイ中だけ会話をDBに持ち、
     終わった時点（クリア・失敗・中断）で発言と返答を消す（2026-11-24 丸山の判断：案A）
 """
+from datetime import timedelta
+
 from django.db import transaction
-from django.db.models import Sum
 from django.utils import timezone
 
 from accounts.models import User, UserSetting
@@ -289,20 +290,12 @@ def today_rank(play):
     """
     if play.status != game.CLEARED or play.scenario.kind != Scenario.Kind.RANDOM:
         return None
-    day = timezone.localtime(play.finished_at).date()
-    totals = (
-        Play.objects.filter(
-            status=game.CLEARED,
-            scenario__kind=Scenario.Kind.RANDOM,
-            scenario__difficulty=play.scenario.difficulty,
-            finished_at__date=day,
-            user__is_active=True,
-        )
-        .values("user")
-        .annotate(total=Sum("score"))
-    )
-    mine = next((row["total"] for row in totals if row["user"] == play.user_id), 0)
-    return 1 + sum(1 for row in totals if row["total"] > mine)
+    # ランキング画面と同じ集計（plays/ranking.py）を、このプレイを終えた日・同じ難易度で行う
+    from . import ranking
+
+    start = ranking.period_start("today", play.finished_at)
+    rows = ranking.aggregate(start, play.scenario.difficulty, end=start + timedelta(days=1))
+    return ranking.rank_of(play.user_id, rows)
 
 
 def is_new_best(play):

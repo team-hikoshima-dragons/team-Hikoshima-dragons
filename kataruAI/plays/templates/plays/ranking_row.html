@@ -1,0 +1,7 @@
+{# ランキングの1行（No.15〜19）。自分の行はハイライト＋「あなた」、1〜3位はメダル色 #}
+<tr{% if row.user_id == user.pk %} class="rank-table__me"{% endif %}>
+  <td><span class="medal {% if row.rank <= 3 %}medal--{{ row.rank }}{% else %}medal--n{% endif %}">{{ row.rank }}</span></td>
+  <td><span class="rank-table__player"><span class="avatar">{{ row.username|slice:":1" }}</span>{{ row.username }}{% if row.user_id == user.pk %} <span class="you">あなた</span>{% endif %}</span></td>
+  <td class="num">{{ row.clears }}件</td>
+  <td class="num">{{ row.total_text }}</td>
+</tr>

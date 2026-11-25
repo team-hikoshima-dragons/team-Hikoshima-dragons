@@ -19,6 +19,8 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
+from plays import ranking
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('kataruAI.urls')),
@@ -26,6 +28,7 @@ urlpatterns = [
     path('api/plays/', include('plays.api_urls')),
     path('accounts/', include('accounts.urls')),
     path('scenarios/', include('scenarios.urls')),
+    path('rankings/', ranking.ranking, name='ranking'),
 ]
 
 # アップロード画像の配信（DEBUG=True のときだけ有効。本番は nginx が配信する）

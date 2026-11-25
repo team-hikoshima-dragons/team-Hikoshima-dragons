@@ -1,5 +1,6 @@
 /* シナリオ作成（イベント39〜42）
-   ※事前チェックは使いやすさのため。サーバー側でも同じ検証が必須（画像はImageField＋UUIDファイル名） */
+   ※事前チェックは使いやすさのため。サーバー側（scenarios/forms.py）でも同じ検証をしている。
+   送信：POST /scenarios/create/（multipart/form-data・X-CSRFToken）。失敗しても入力内容は消さない。 */
 (function () {
   "use strict";
 
@@ -8,7 +9,6 @@
   const title = $("title");
   const desc = $("description");
   const formError = $("form-error");
-  const mockError = new URLSearchParams(location.search).get("mock") === "error";
   const MAX_IMG = 2 * 1024 * 1024;
   const IMG_TYPES = ["image/png", "image/jpeg", "image/webp"];
   let objectUrl = null;
@@ -87,24 +87,38 @@
     $("preview-loading").hidden = false;
     $("preview-body").hidden = true;
 
-    // ↓ 本番は fetch（multipart/form-data）。入力内容は失敗しても消さない
-    setTimeout(function () {
+    const csrf = form.querySelector('input[name="csrfmiddlewaretoken"]').value;
+    function done() {
       btn.disabled = false;
       btn.textContent = "AIでシナリオを作成";
       $("preview-loading").hidden = true;
       $("preview-body").hidden = false;
+    }
 
-      if (d.indexOf("ブロック") !== -1) { // モック：NGワード／セーフティ
-        return showError("この内容ではシナリオを作れませんでした。表現を変えてみてね。");
-      }
-      if (mockError) {
-        return showError("シナリオの作成に失敗しました。もう一度ためしてね。");
-      }
-      setPreview("preview-name", "喫茶店マスター");
-      setPreview("preview-intro", "開店30年。常連は大切にするが、理屈っぽい客は嫌い。最近は体力の衰えを気にしている。");
-      setPreview("preview-goal", "閉店を30分延ばすと約束させる");
-      setPreview("preview-cond", "値引きの話はNG");
-      window.Kataru.toast("非公開で保存しました（共有コード：A1B2C3D4）");
-    }, 1800);
+    fetch(location.pathname, {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "X-CSRFToken": csrf },
+      body: new FormData(form),
+      signal: AbortSignal.timeout(45000) // サーバー側の Gemini 待ち（25秒）より長めに待つ
+    })
+      .then(function (res) {
+        return res.json().catch(function () { return null; }).then(function (data) {
+          done();
+          if (!res.ok || !data) {
+            const message = data && data.error && data.error.message;
+            return showError(message || "シナリオの作成に失敗しました。もう一度ためしてね。");
+          }
+          setPreview("preview-name", data.character_name);
+          setPreview("preview-intro", data.character_intro);
+          setPreview("preview-goal", data.goal);
+          setPreview("preview-cond", data.condition);
+          window.Kataru.toast("シナリオを作成しました（非公開・共有コード：" + data.share_code + "）");
+        });
+      })
+      .catch(function () {
+        done();
+        showError("通信エラーが発生しました。もう一度ためしてね。");
+      });
   });
 })();

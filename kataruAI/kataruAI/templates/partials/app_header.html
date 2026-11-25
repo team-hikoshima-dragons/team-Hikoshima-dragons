@@ -1,0 +1,14 @@
+{% comment %}
+  共通ヘッダー1（Common-Header）：ログイン後の画面で使う（Drive のモック app_header.html より）
+  使い方：{% include "partials/app_header.html" with current="history" %}
+  current に表示中の画面（home / scenarios / history / mypage）を渡すと、その項目に下線（aria-current）が付く
+{% endcomment %}
+<header class="header">
+  <a href="/" class="logo">カタル<span>AI</span></a>{# No.1 イベント1 #}
+  <nav class="gnav" aria-label="メインメニュー">
+    <a href="/" class="gnav__item"{% if current == "home" %} aria-current="page"{% endif %}>ホーム</a>{# No.2 イベント1 #}
+    <a href="/scenarios/" class="gnav__item"{% if current == "scenarios" %} aria-current="page"{% endif %}>シナリオ一覧</a>{# No.3 イベント2 #}
+    <a href="/plays/history/" class="gnav__item"{% if current == "history" %} aria-current="page"{% endif %}>プレイ履歴</a>{# No.4 イベント3 #}
+    <a href="/accounts/mypage/" class="gnav__item"{% if current == "mypage" %} aria-current="page"{% endif %}><span class="avatar">{{ user.username|slice:":1" }}</span><span class="gnav__label">マイページ</span></a>{# No.5 イベント4 #}
+  </nav>
+</header>

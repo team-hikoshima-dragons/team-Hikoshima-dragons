@@ -23,3 +23,6 @@ node_modules/
 frontend/dist/
 
 staticfiles/
+
+# アップロードされた画像（シナリオ作成のキャラクター画像）
+kataruAI/media/

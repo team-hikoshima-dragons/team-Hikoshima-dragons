@@ -1,0 +1,84 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>作成したシナリオ | カタルAI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Zen+Maru+Gothic:wght@500;900&display=swap">
+  <link rel="stylesheet" href="{% static 'css/common.css' %}">
+  <link rel="stylesheet" href="{% static 'css/pages/list.css' %}">
+</head>
+<body>
+{% comment %} 画面ID: MyScenarios（Drive のモック my_scenarios.html より）。公開切替・削除は my-scenarios.js {% endcomment %}
+<div class="page">
+  {% include "partials/app_header.html" with current="mypage" %}
+
+  <main class="main">
+    <div class="container">
+      <a href="{% url 'accounts:mypage' %}" class="back-link">← マイページに戻る</a><!-- No.1 イベント4 -->
+      <div class="page-head">
+        <div>
+          <h1 class="page-title">作成したシナリオ</h1><!-- No.2 -->
+          <p class="page-lead">公開すると、シナリオ一覧とコード検索でほかの人が遊べるようになるよ。</p><!-- No.3 -->
+        </div>
+        <a href="{% url 'scenarios:create' %}" class="btn btn--primary">＋ 新しく作る</a><!-- No.4 イベント13 -->
+      </div>
+
+      <!-- No.5 シナリオ行：削除済みを除き作成日の新しい順・1ページ20件 -->
+      {% if cards %}
+      <ul class="list" id="my-list">
+        {% for c in cards %}
+        <li class="row" data-public="{% if c.scenario.is_public %}true{% else %}false{% endif %}" data-id="{{ c.scenario.pk }}">
+          <span class="face"><img src="{{ c.image_url }}" alt=""></span><!-- No.6 -->
+          <div class="row__body">
+            <div class="row__title">
+              <p>{{ c.scenario.title }}</p><!-- No.7 -->
+              <span class="lv lv--{{ c.scenario.difficulty }}">{{ c.difficulty_label }}</span><!-- No.8 -->
+              {% if c.scenario.is_public %}
+              <span class="badge badge--public" data-status>公開中</span><!-- No.9 -->
+              {% else %}
+              <span class="badge badge--private" data-status>非公開</span>
+              {% endif %}
+            </div>
+            <div class="row__meta">
+              <span>作成日 {{ c.scenario.created_at|date:"Y/m/d" }}</span><!-- No.10 -->
+              <span>{{ c.scenario.play_count }}回プレイ</span><!-- No.11 -->
+              <span>★{{ c.scenario.favorite_count }}</span><!-- No.12 -->
+              <span>コード <span class="code">{{ c.scenario.share_code }}</span></span><!-- No.16 -->
+            </div>
+          </div>
+          <div class="row__actions">
+            {% if c.scenario.is_public %}
+            <button type="button" class="btn btn--s" data-toggle-public>非公開にする</button><!-- No.13 イベント44 -->
+            {% else %}
+            <button type="button" class="btn btn--s btn--primary" data-toggle-public>公開する</button>
+            {% endif %}
+            <button type="button" class="btn-text btn-text--danger" data-delete>削除</button><!-- No.15 イベント46 -->
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="empty" id="empty">作成したシナリオはまだありません。『新しく作る』ボタンから作成できます</p>
+      {% endif %}
+
+      {% if page.paginator.num_pages > 1 %}
+      <nav class="pager" aria-label="ページ送り">
+        {% if page.has_previous %}<a href="?page={{ page.previous_page_number }}" class="btn btn--s">← 前へ</a>
+        {% else %}<a class="btn btn--s" aria-disabled="true">← 前へ</a>{% endif %}
+        <span class="pager__info">{{ page.number }} / {{ page.paginator.num_pages }}</span>
+        {% if page.has_next %}<a href="?page={{ page.next_page_number }}" class="btn btn--s">次へ →</a>
+        {% else %}<a class="btn btn--s" aria-disabled="true">次へ →</a>{% endif %}
+      </nav>
+      {% endif %}
+    </div>
+  </main>
+</div>
+
+<script src="{% static 'js/common.js' %}"></script>
+<script src="{% static 'js/my-scenarios.js' %}"></script>
+</body>
+</html>

@@ -1,0 +1,93 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>プレイ履歴 | カタルAI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Zen+Maru+Gothic:wght@500;900&display=swap">
+  <link rel="stylesheet" href="{% static 'css/common.css' %}">
+  <link rel="stylesheet" href="{% static 'css/pages/list.css' %}">
+</head>
+<body>
+{% comment %} 画面ID: Play-History（Drive のモック play_history.html より） {% endcomment %}
+<div class="page">
+  {% include "partials/app_header.html" with current="history" %}
+
+  <main class="main">
+    <div class="container container--narrow">
+      <div class="page-head">
+        <div>
+          <h1 class="page-title">プレイ履歴</h1><!-- No.1 -->
+          <p class="page-lead">これまでの説得の記録。行を押すと会話を見返せるよ。</p><!-- No.2 -->
+        </div>
+      </div>
+
+      <!-- No.3〜6 難易度フィルター（イベント20）：?difficulty=... で再読み込み -->
+      <form method="get" class="seg filterbar" role="group" aria-label="難易度で絞り込み">
+        {% for value, label in filters %}
+        <button type="submit" class="seg__btn" name="difficulty" value="{{ value }}" aria-pressed="{% if value == difficulty %}true{% else %}false{% endif %}">{{ label }}</button>
+        {% endfor %}
+      </form>
+
+      <!-- No.7 履歴リスト：新しい順・1ページ20件。中断は含めない -->
+      {% if rows %}
+      <ul class="list">
+        {% for row in rows %}
+        <li>
+          <a href="{{ row.url }}" class="row row--link history-row{% if row.play.status == 'playing' %} history-row--playing{% endif %}">
+            <span class="face"><img src="{% static row.face_path %}" alt=""></span><!-- No.8 -->
+            <div class="row__body">
+              <div>
+                <div class="row__title">
+                  {% if row.play.status == "cleared" %}<span class="badge badge--clear">クリア</span>
+                  {% elif row.play.status == "failed" %}<span class="badge badge--fail">失敗</span>
+                  {% else %}<span class="badge badge--playing">プレイ中</span>{% endif %}<!-- No.9 -->
+                  <p>{{ row.play.scenario.title }}</p><!-- No.10 -->
+                </div>
+                <div class="row__meta">
+                  <span class="lv lv--{{ row.difficulty }}">{{ row.difficulty_label }}</span><!-- No.11 -->
+                  <span>{{ row.play.started_at|date:"Y/m/d H:i" }}</span><!-- No.12 -->
+                  <span>{{ row.play.turns_used }}ターン</span><!-- No.13 -->
+                  {% if row.play.status == "playing" %}<span class="resume-hint">▶ 続きから再開</span>{% endif %}
+                </div>
+              </div>
+              {% if row.play.status == "playing" %}
+              <p class="history-row__score">・・・</p><!-- No.14 プレイ中は「・・・」 -->
+              {% else %}
+              <p class="history-row__score">{{ row.play.score|default_if_none:0 }}<small>点</small></p>
+              {% endif %}
+            </div>
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="empty">表示できるプレイ履歴がありません</p>
+      {% endif %}
+
+      {% if page.paginator.num_pages > 1 %}
+      <!-- ページャー（前へ／次へ） -->
+      <nav class="pager" aria-label="ページ送り">
+        {% if page.has_previous %}
+        <a href="?difficulty={{ difficulty }}&amp;page={{ page.previous_page_number }}" class="btn btn--s">← 前へ</a>
+        {% else %}
+        <a class="btn btn--s" aria-disabled="true">← 前へ</a>
+        {% endif %}
+        <span class="pager__info">{{ page.number }} / {{ page.paginator.num_pages }}</span>
+        {% if page.has_next %}
+        <a href="?difficulty={{ difficulty }}&amp;page={{ page.next_page_number }}" class="btn btn--s">次へ →</a>
+        {% else %}
+        <a class="btn btn--s" aria-disabled="true">次へ →</a>
+        {% endif %}
+      </nav>
+      {% endif %}
+    </div>
+  </main>
+</div>
+
+<script src="{% static 'js/common.js' %}"></script>
+</body>
+</html>

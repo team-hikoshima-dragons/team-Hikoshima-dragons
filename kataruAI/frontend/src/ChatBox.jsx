@@ -49,10 +49,30 @@ function getPlayIdFromUrl() {
 }
 
 const MAX_LENGTH = 120 // 発言の上限（サーバー側でも検証している）
-const AVATAR_INITIAL = 'K' // TODO：会員のときは頭文字、ゲストのときの表示を決める（元のコードのまま）
+const AVATAR_INITIAL = 'K' // ゲストのときの表示（元のコードのまま）。会員はサーバーが返す頭文字を使う
+// テキスト速度（ゲーム設定）：相手のセリフを1文字ずつ出す間隔（ミリ秒）。settings.js の見本と同じ値
+const SPEED_MS = { slow: 90, normal: 45, fast: 15 }
 
 // 表情の画像は Django の static から配る
 const faceSrc = (expression) => `/static/img/face-${expression}.svg`
+
+// 相手のセリフを、テキスト速度に合わせて1文字ずつ表示する（新しく届いた返答だけに使う）
+function TypingText({ text, speed }) {
+    const [count, setCount] = useState(0)
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setCount((c) => {
+                if (c >= text.length) {
+                    clearInterval(timer)
+                    return c
+                }
+                return c + 1
+            })
+        }, SPEED_MS[speed] || SPEED_MS.normal)
+        return () => clearInterval(timer)
+    }, [text, speed])
+    return text.slice(0, count)
+}
 
 export default function ChatBox() {
     const [playId] = useState(getPlayIdFromUrl) // 開いたときのURLから読む
@@ -137,7 +157,8 @@ export default function ChatBox() {
 
         // ---- 成功 ----
         if (ok && data) {
-            setMessages((prev) => [...prev, { role: 'model', text: data.reply }])
+            // typing: 新しく届いた返答なので、テキスト速度に合わせて1文字ずつ出す
+            setMessages((prev) => [...prev, { role: 'model', text: data.reply, typing: true }])
             setStateText(data.state)
             setExpression(data.expression)
             setTurnsLeft(data.turns_left)
@@ -252,7 +273,8 @@ export default function ChatBox() {
                 <aside className="opp">
                     <div className="opp__profile">
                         <div className="opp__face" data-mood={expression}>
-                            <img src={faceSrc(expression)} alt={`${name}の表情`} width="150" height="150" />
+                            {/* ユーザー作成シナリオは登録画像1枚のまま（様子は文字と枠の色で伝える。設計書【表情】） */}
+                            <img src={play.image_url || faceSrc(expression)} alt={`${name}の表情`} width="150" height="150" />
                         </div>
                         <h2 className="opp__name">{name}</h2>
                         <p className="opp__desc">{play.character.intro}</p>
@@ -275,14 +297,16 @@ export default function ChatBox() {
                                 m.role === 'user' ? (
                                     <div key={i} className="talk__row talk__row--user">
                                         <p className="talk__bubble">{m.text}</p>
-                                        <span className="avatar">{AVATAR_INITIAL}</span>
+                                        <span className="avatar">{play.player_initial || AVATAR_INITIAL}</span>
                                     </div>
                                 ) : (
                                     <div key={i} className="talk__row talk__row--opp">
                                         <span className="talk__icon">
-                                            <img src={faceSrc(i === lastModelIndex ? expression : 'normal')} alt="" />
+                                            <img src={play.image_url || faceSrc(i === lastModelIndex ? expression : 'normal')} alt="" />
                                         </span>
-                                        <p className="talk__bubble">{m.text}</p>
+                                        <p className="talk__bubble">
+                                            {m.typing ? <TypingText text={m.text} speed={play.text_speed} /> : m.text}
+                                        </p>
                                     </div>
                                 )
                             )}

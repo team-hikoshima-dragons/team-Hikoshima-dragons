@@ -1,0 +1,114 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>プレイ履歴詳細 | カタルAI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Zen+Maru+Gothic:wght@500;900&display=swap">
+  <link rel="stylesheet" href="{% static 'css/common.css' %}">
+  <link rel="stylesheet" href="{% static 'css/pages/play.css' %}">
+</head>
+<body>
+{% comment %} 画面ID: Play-History-Detail（Drive のモック play_history_detail.html より） {% endcomment %}
+<div class="page">
+  {% include "partials/app_header.html" with current="history" %}
+
+  <main class="main">
+    <div class="container">
+      <a href="/plays/history/" class="back-link">← プレイ履歴に戻る</a><!-- No.1 イベント3 -->
+
+      {% if not_found %}
+      <p class="empty">{{ not_found }}</p>
+      {% else %}
+      <div class="hd">
+        <div>
+          <!-- No.2 結果全体 -->
+          <section class="card hd__summary">
+            <span class="face face--l"><img src="{% static face_path %}" alt="{{ play.scenario.character_name }}"></span><!-- No.3 -->
+            <div>
+              <div class="row__meta">
+                {% if cleared %}<span class="badge badge--clear">✓ クリア</span>{% else %}<span class="badge badge--fail">× 失敗</span>{% endif %}<!-- No.4 -->
+                <span class="lv lv--{{ difficulty }}">{{ difficulty_label }}</span><!-- No.5 -->
+              </div>
+              <h1 class="hd__title">{{ play.scenario.title }}</h1><!-- No.6 -->
+              <div class="hd__meta">
+                <span>{{ play.started_at|date:"Y/m/d H:i" }}</span><!-- No.7 -->
+                <span>{{ play.turns_used }}ターン / {{ play.turn_limit }}ターン</span><!-- No.8 -->
+                <span>スコア <strong>{{ play.score|default_if_none:0 }}</strong>点</span><!-- No.9 -->
+              </div>
+            </div>
+          </section>
+
+          <!-- No.10 会話ログ全体 -->
+          <section class="card hd__log" aria-label="会話ログ">
+            {% if messages_log %}
+            <div class="talk">
+              {% for m in messages_log %}
+              {% if m.role == "user" %}
+              <div class="talk__row talk__row--user">
+                <p class="talk__bubble">{{ m.text }}</p><!-- No.13 -->
+                <span class="avatar">{{ user.username|slice:":1" }}</span><!-- No.14 -->
+              </div>
+              {% else %}
+              <div class="talk__row talk__row--opp">
+                <span class="talk__icon"><img src="{% static m.face_path %}" alt=""></span><!-- No.11 -->
+                <p class="talk__bubble">{{ m.text }}</p><!-- No.12 -->
+              </div>
+              {% endif %}
+              {% endfor %}
+            </div>
+            {% else %}
+            <p class="empty">このプレイの会話は保存されていません</p>
+            {% endif %}
+          </section>
+        </div>
+
+        <!-- No.15 右側パネル -->
+        <aside class="card hd__panel">
+          <h2>{{ play.scenario.character_name }}の様子の変化</h2><!-- No.19 -->
+          <ol class="timeline"><!-- No.18 -->
+            {% for item in timeline %}
+            <li{% if item.is_final %} class="is-final"{% endif %}><span>{{ item.turn_no }}ターン</span><span>{{ item.state }}</span></li>
+            {% endfor %}
+          </ol>
+          {% if key_turn %}
+          <!-- No.17 解説テキスト：様子の変化が最も大きかったターンの reason -->
+          <p class="explain"><strong>{{ key_turn.turn_no }}ターン目がポイント</strong>{{ key_turn.reason }}</p>
+          {% endif %}
+          <!-- No.16 もう一度挑戦する（イベント22）：シナリオ削除済みなら disabled -->
+          <button type="button" class="btn btn--primary btn--block" id="start-btn" data-scenario-id="{{ play.scenario_id }}"{% if not can_retry %} disabled{% endif %}>もう一度挑戦する</button>
+        </aside>
+      </div>
+      {% endif %}
+    </div>
+  </main>
+</div>
+
+{% if not not_found %}
+<!-- 開始中の表示とエラー（top.js が使う。トップ画面と同じ部品） -->
+<div class="overlay" id="overlay-generating" data-static hidden>
+  <div class="modal" role="status" aria-live="polite">
+    <div class="spinner" aria-hidden="true"></div>
+    <p class="modal__title">準備しています…</p>
+  </div>
+</div>
+<div class="overlay" id="overlay-gen-error" hidden>
+  <div class="modal" role="alertdialog" aria-labelledby="gen-error-title">
+    <button type="button" class="modal__close" data-close aria-label="閉じる">×</button>
+    <p class="modal__title" id="gen-error-title">開始できませんでした</p>
+    <p class="modal__text" id="gen-error-text">通信エラーが発生しました。もう一度ためしてね。</p>
+    <div class="modal__actions">
+      <button type="button" class="btn" data-close>キャンセル</button>
+      <button type="button" class="btn btn--primary" id="retry-btn">再試行</button>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<script src="{% static 'js/common.js' %}"></script>
+{% if not not_found %}<script src="{% static 'js/top.js' %}"></script>{% endif %}
+</body>
+</html>

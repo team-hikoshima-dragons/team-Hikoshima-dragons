@@ -1,0 +1,156 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% if favorites_only %}お気に入り{% else %}シナリオ一覧{% endif %} | カタルAI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Zen+Maru+Gothic:wght@500;900&display=swap">
+  <link rel="stylesheet" href="{% static 'css/common.css' %}">
+  <link rel="stylesheet" href="{% static 'css/pages/list.css' %}">
+</head>
+<body>
+{% comment %}
+  画面ID: Scenario-List / Favorites-List（Drive のモック scenario_list.html・favorites.html・
+  scenario_detail_overlay.html・code_search_overlay.html より）。2画面は同じテンプレートで、favorites_only で出し分ける。
+  行の data-* は詳細オーバーレイに表示する値。scenario-list.js が textContent で入れる（innerHTML は使わない）。
+{% endcomment %}
+<div class="page">
+  {% include "partials/app_header.html" with current="scenarios" %}
+
+  <main class="main">
+    <div class="container">
+      <div class="page-head">
+        <div>
+          <h1 class="page-title">{% if favorites_only %}お気に入り{% else %}シナリオ一覧{% endif %}</h1><!-- No.1 -->
+          {% if favorites_only %}
+          <p class="page-lead">★を付けたシナリオだけを表示中（{{ total }}件）</p><!-- No.5 -->
+          {% else %}
+          <p class="page-lead">遊びたいシナリオを探して、▶ で挑戦しよう。</p><!-- No.2 -->
+          {% endif %}
+        </div>
+        <!-- すべて／お気に入り（イベント23） -->
+        <nav class="seg" aria-label="表示対象">
+          <a href="{% url 'scenarios:list' %}" class="seg__btn"{% if not favorites_only %} aria-current="page"{% endif %}>すべて</a>
+          <a href="{% url 'scenarios:favorites' %}" class="seg__btn"{% if favorites_only %} aria-current="page"{% endif %}>★ お気に入り</a>
+        </nav>
+      </div>
+
+      <!-- 検索（イベント24）。q・sort はクエリで渡す -->
+      <form class="toolbar" role="search" method="get">
+        <div class="search">
+          <span class="search__icon" aria-hidden="true">🔍</span>
+          <label for="q" class="visually-hidden">検索</label>
+          <input class="input" type="search" id="q" name="q" value="{{ q }}" placeholder="シナリオ名・キャラクター名で検索">
+        </div>
+        <input type="hidden" name="sort" value="{{ sort }}">
+        <button type="submit" class="btn btn--primary">検索</button>
+        <button type="button" class="btn" data-open="overlay-code">コードで探す</button><!-- イベント25 -->
+      </form>
+
+      <!-- 並び替え（イベント26） -->
+      <form class="sortbar" method="get">
+        <span class="sortbar__label">並び替え</span>
+        <input type="hidden" name="q" value="{{ q }}">
+        <div class="seg">
+          {% for value, label in sorts %}
+          <button type="submit" class="seg__btn" name="sort" value="{{ value }}" aria-pressed="{% if value == sort %}true{% else %}false{% endif %}">{{ label }}</button>
+          {% endfor %}
+        </div>
+      </form>
+
+      <!-- シナリオ一覧：公開中・未削除のみ、1ページ20件 -->
+      {% if rows %}
+      <ul class="list" id="scenario-list">
+        {% for row in rows %}
+        <li class="row row--link" data-open="overlay-detail" tabindex="0"
+            data-id="{{ row.detail.id }}" data-title="{{ row.detail.title }}" data-name="{{ row.detail.name }}"
+            data-level="{{ row.detail.level }}" data-desc="{{ row.detail.desc }}" data-author="{{ row.detail.author }}"
+            data-plays="{{ row.detail.plays }}" data-best="{{ row.detail.best }}" data-goal="{{ row.detail.goal }}"
+            data-cond="{{ row.detail.cond }}" data-image="{{ row.detail.image }}" data-fav="{% if row.detail.fav %}true{% else %}false{% endif %}">
+          <span class="face"><img src="{{ row.image_url }}" alt=""></span>
+          <div class="row__body">
+            <div class="row__title">
+              <p>{{ row.scenario.title }}</p>
+              <span class="lv lv--{{ row.scenario.difficulty }}">{{ row.difficulty_label }}</span>
+            </div>
+            <div class="row__meta">
+              <span>作成：{{ row.scenario.creator.username }}</span>
+              <span>{{ row.scenario.play_count }}回プレイ</span>
+              <span data-fav-count>★{{ row.scenario.favorite_count }}</span>
+            </div>
+          </div>
+          <div class="row__actions">
+            <button type="button" class="icon-btn icon-btn--fav" aria-pressed="{% if row.detail.fav %}true{% else %}false{% endif %}" aria-label="{% if row.detail.fav %}お気に入りを解除{% else %}お気に入りに登録{% endif %}">★</button><!-- イベント28 -->
+            <button type="button" class="icon-btn icon-btn--play" aria-label="詳細を見る">▶</button><!-- イベント27 -->
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="empty">{{ empty_message }}</p>
+      {% endif %}
+
+      {% if page.paginator.num_pages > 1 %}
+      <nav class="pager" aria-label="ページ送り">
+        {% if page.has_previous %}<a href="?q={{ q|urlencode }}&amp;sort={{ sort }}&amp;page={{ page.previous_page_number }}" class="btn btn--s">← 前へ</a>
+        {% else %}<a class="btn btn--s" aria-disabled="true">← 前へ</a>{% endif %}
+        <span class="pager__info">{{ page.number }} / {{ page.paginator.num_pages }}</span>
+        {% if page.has_next %}<a href="?q={{ q|urlencode }}&amp;sort={{ sort }}&amp;page={{ page.next_page_number }}" class="btn btn--s">次へ →</a>
+        {% else %}<a class="btn btn--s" aria-disabled="true">次へ →</a>{% endif %}
+      </nav>
+      {% endif %}
+    </div>
+  </main>
+</div>
+
+<!-- O1 シナリオ詳細オーバーレイ -->
+<div class="overlay" id="overlay-detail" hidden>
+  <div class="modal modal--wide" role="dialog" aria-modal="true" aria-labelledby="detail-name">
+    <button type="button" class="modal__close" data-close aria-label="閉じる">×</button><!-- イベント30 -->
+    <p class="detail__label">このシナリオで遊ぶ？</p>
+    <div class="detail">
+      <span class="face face--l"><img id="detail-face" src="{% static 'img/silhouette.svg' %}" alt=""></span>
+      <div>
+        <h2 class="detail__name"><span id="detail-name"></span><span class="lv" id="detail-level"></span></h2>
+        <p class="detail__desc" id="detail-desc"></p>
+        <p class="detail__meta">
+          <span id="detail-author"></span>
+          <span id="detail-plays"></span>
+        </p>
+        <p class="detail__best">自己ベスト：<span id="detail-best">-</span></p>
+      </div>
+    </div>
+    <div class="goal-box">
+      <p class="goal-box__item"><span class="goal-box__tag">ゴール</span><span id="detail-goal"></span></p>
+      <p class="goal-box__item"><span class="goal-box__tag goal-box__tag--cond">条件</span><span id="detail-cond"></span></p>
+    </div>
+    <p class="error-text" id="detail-error" role="alert" hidden></p>
+    <div class="detail__actions">
+      <button type="button" class="btn" id="detail-fav" aria-pressed="false">☆ お気に入りに登録</button><!-- イベント28 -->
+      <button type="button" class="btn btn--primary" id="detail-start">このシナリオで遊ぶ</button><!-- イベント29 -->
+    </div>
+  </div>
+</div>
+
+<!-- O2 コード検索オーバーレイ -->
+<div class="overlay" id="overlay-code" hidden>
+  <form class="modal" id="code-form" role="dialog" aria-modal="true" aria-labelledby="code-title" novalidate>
+    <h3 class="modal__title" id="code-title">コードで探す</h3>
+    <p class="modal__text">シナリオの共有コード（8桁）を入力してね。</p>
+    <label for="share-code" class="visually-hidden">共有コード</label>
+    <input class="input code-input" type="text" id="share-code" name="share_code" maxlength="8" placeholder="例：A1B2C3D4" autocomplete="off">
+    <p class="error-text" id="code-error" role="alert" hidden></p>
+    <div class="modal__actions">
+      <button type="button" class="btn" data-close>キャンセル</button><!-- イベント53 -->
+      <button type="submit" class="btn btn--primary">探す</button><!-- イベント52 -->
+    </div>
+  </form>
+</div>
+
+<script src="{% static 'js/common.js' %}"></script>
+<script src="{% static 'js/scenario-list.js' %}"></script>
+</body>
+</html>

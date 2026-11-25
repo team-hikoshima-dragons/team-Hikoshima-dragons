@@ -181,3 +181,40 @@ class PlayUserScenarioTest(BrowseTestBase):
         play_id = self.start(scenario)
         self.clear(play_id)
         self.assertNotContains(self.client.get(f"/plays/{play_id}/result/"), "自己ベスト更新！")
+
+
+class DetailApiTest(BrowseTestBase):
+    """シナリオ詳細の取得（ユースケース記述テスト仕様書 11）"""
+
+    def test_detail_of_public_scenario(self):
+        scenario = self.make("公開シナリオ", name="マスター")
+        self.play(scenario, score=700, turns_used=4)
+        res = self.client.get(f"/scenarios/{scenario.pk}/")
+        self.assertEqual(res.status_code, 200)
+        data = res.json()
+        self.assertEqual((data["id"], data["name"], data["author"]), (scenario.pk, "マスター", "さくしゃ"))
+        self.assertEqual((data["goal"], data["cond"], data["level"]), ("ゴール", "条件", "beginner"))
+        self.assertEqual(data["plays"], 1)
+        self.assertEqual(data["best"], "4ターン／スコア700")
+
+    def test_cannot_show_missing_deleted_or_others_private(self):
+        """テスト仕様書 11「表示できないシナリオ」"""
+        deleted = self.make(deleted_at=timezone.now())
+        private = self.make(public=False)
+        for pk in (999999, deleted.pk, private.pk):
+            res = self.client.get(f"/scenarios/{pk}/")
+            self.assertEqual(res.status_code, 404)
+            self.assertEqual(res.json()["error"]["message"], "指定したシナリオは存在しないか、削除されています。")
+
+    def test_own_private_scenario_can_be_shown(self):
+        mine = Scenario.objects.create(creator=self.user, kind="user", difficulty="beginner", title="自分の非公開")
+        self.assertEqual(self.client.get(f"/scenarios/{mine.pk}/").status_code, 200)
+
+    def test_random_scenario_is_not_shown(self):
+        random = Scenario.objects.create(creator=self.user, kind="random", difficulty="beginner", title="ランダム")
+        self.assertEqual(self.client.get(f"/scenarios/{random.pk}/").status_code, 404)
+
+    def test_login_required(self):
+        scenario = self.make()
+        self.client.logout()
+        self.assertEqual(self.client.get(f"/scenarios/{scenario.pk}/").status_code, 302)

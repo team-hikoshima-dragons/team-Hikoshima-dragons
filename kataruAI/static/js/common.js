@@ -100,20 +100,7 @@
     toastTimer = setTimeout(function () { el.hidden = true; }, 2600);
   }
 
-  /* ---------- お気に入りボタン（イベント28） ----------
-     本番：fetch でPOST → 失敗したら元に戻して「保存に失敗しました」 */
-  document.addEventListener("click", function (e) {
-    const btn = e.target.closest(".icon-btn--fav, [data-fav-toggle]");
-    if (!btn) return;
-    e.stopPropagation();
-    const on = btn.getAttribute("aria-pressed") !== "true";
-    btn.setAttribute("aria-pressed", String(on));
-    btn.setAttribute("aria-label", on ? "お気に入りを解除" : "お気に入りに登録");
-    if (btn.dataset.favToggle !== undefined) {
-      btn.textContent = on ? "★ お気に入り登録済み" : "☆ お気に入りに登録";
-    }
-    toast(on ? "お気に入りに登録しました" : "お気に入りを解除しました");
-  });
+  /* お気に入りボタン（イベント28）の保存は scenario-list.js が行う（モックの切り替え処理は削除した） */
 
   /* 他の画面のJSから使えるように公開 */
   window.Kataru = { openOverlay: openOverlay, closeOverlay: closeOverlay, toast: toast };

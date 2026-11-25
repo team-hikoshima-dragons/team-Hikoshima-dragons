@@ -13,6 +13,7 @@ from django.db.models import Sum
 from django.utils import timezone
 
 from accounts.models import User, UserSetting
+from scenarios.images import image_url
 from scenarios.models import Scenario
 
 from . import game
@@ -171,6 +172,8 @@ def public_view(play):
         "expression": last.expression if last else INITIAL_EXPRESSION,
         "text_speed": setting.text_speed,
         "player_initial": play.user.username[:1],  # 自分の吹き出しのアイコン（ユーザー名の頭文字）
+        # ユーザー作成シナリオは登録画像（なければ標準シルエット）を使う。ランダムなお題は表情のSVG
+        "image_url": image_url(scenario) if scenario.kind == Scenario.Kind.USER else None,
     }
     if play.status in (game.CLEARED, game.FAILED):
         view["result_url"] = result_url(play.pk)
@@ -302,6 +305,22 @@ def today_rank(play):
     return 1 + sum(1 for row in totals if row["total"] > mine)
 
 
+def is_new_best(play):
+    """自己ベスト更新か（ユーザー作成シナリオをクリアし、それまでの自分のクリアの最高点を超えたとき。
+    はじめてのクリアも更新とみなす）。ランダムなお題は毎回別のお題なので対象外（画面設計書 リザルト No.9）"""
+    if play.status != game.CLEARED or play.scenario.kind != Scenario.Kind.USER:
+        return False
+    previous = (
+        Play.objects.filter(user_id=play.user_id, scenario_id=play.scenario_id, status=game.CLEARED,
+                            finished_at__lt=play.finished_at)
+        .exclude(pk=play.pk)
+        .order_by("-score")
+        .values_list("score", flat=True)
+        .first()
+    )
+    return previous is None or play.score > previous
+
+
 def result_view(play):
     """リザルト画面に渡す内容（guest_play.result_view と同じ形＋会員だけの項目）。"""
     rules = _rules(play)
@@ -321,7 +340,10 @@ def result_view(play):
         "turn_limit": play.turn_limit,
         "clear_time_text": "—" if seconds is None else f"{seconds // 60}:{seconds % 60:02d}",
         "face_path": "img/face-happy.svg" if cleared else "img/face-angry.svg",
+        # ユーザー作成シナリオは登録画像を出す（None ならテンプレートが face_path を使う）
+        "image_url": image_url(play.scenario) if play.scenario.kind == Scenario.Kind.USER else None,
         "today_rank": today_rank(play),
+        "new_best": is_new_best(play),
         # もう一度挑戦する（イベント22）：同じシナリオ。削除済みならボタンを無効化する
         "scenario_id": play.scenario_id,
         "can_retry": play.scenario.deleted_at is None,

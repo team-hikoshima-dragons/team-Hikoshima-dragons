@@ -273,7 +273,8 @@ export default function ChatBox() {
                 <aside className="opp">
                     <div className="opp__profile">
                         <div className="opp__face" data-mood={expression}>
-                            <img src={faceSrc(expression)} alt={`${name}の表情`} width="150" height="150" />
+                            {/* ユーザー作成シナリオは登録画像1枚のまま（様子は文字と枠の色で伝える。設計書【表情】） */}
+                            <img src={play.image_url || faceSrc(expression)} alt={`${name}の表情`} width="150" height="150" />
                         </div>
                         <h2 className="opp__name">{name}</h2>
                         <p className="opp__desc">{play.character.intro}</p>
@@ -301,7 +302,7 @@ export default function ChatBox() {
                                 ) : (
                                     <div key={i} className="talk__row talk__row--opp">
                                         <span className="talk__icon">
-                                            <img src={faceSrc(i === lastModelIndex ? expression : 'normal')} alt="" />
+                                            <img src={play.image_url || faceSrc(i === lastModelIndex ? expression : 'normal')} alt="" />
                                         </span>
                                         <p className="talk__bubble">
                                             {m.typing ? <TypingText text={m.text} speed={play.text_speed} /> : m.text}

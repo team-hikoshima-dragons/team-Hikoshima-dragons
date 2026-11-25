@@ -38,7 +38,7 @@
     <div class="result{% if not result.cleared %} result--fail{% endif %}" id="result">
       <!-- 結果カード -->
       <section class="card card--ink result-card">
-        <span class="face face--l"><img id="result-face" src="{% static result.face_path %}" alt="{{ result.character_name }}"></span>
+        <span class="face face--l"><img id="result-face" src="{% if result.image_url %}{{ result.image_url }}{% else %}{% static result.face_path %}{% endif %}" alt="{{ result.character_name }}"></span>
         <div class="result-card__info">
           {% if result.cleared %}
             <span class="badge badge--clear" id="result-badge">✓ クリア</span>
@@ -52,6 +52,9 @@
             <span class="lv lv--{{ result.difficulty }}">{{ result.difficulty_label }}</span>
           </p>
         </div>
+        {% if result.new_best %}
+        <span class="best-badge" id="best-badge">★ 自己ベスト更新！</span>{# No.9 ユーザー作成シナリオで更新したときだけ #}
+        {% endif %}
       </section>
 
       <div class="stats">

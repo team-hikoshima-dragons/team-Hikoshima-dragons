@@ -109,3 +109,46 @@ class ApiTest(TestCase):
         strict = Client(enforce_csrf_checks=True)
         res = strict.post("/api/plays/", data="{}", content_type="application/json")
         self.assertEqual(res.status_code, 403)
+
+
+    # ---------- ゲストの「もう一度挑戦する」（画面設計書 イベント22）：セッションのお題で再挑戦する ----------
+    def finish(self, play_id):
+        self.post(f"/api/plays/{play_id}/give-up/")
+
+    def test_retry_uses_same_scenario_without_ai(self):
+        first = self.start_play()
+        with mock.patch("plays.api.gemini.generate_reply", return_value=reply()):
+            self.post(f"/api/plays/{first}/turns/", {"text": "おねがい", "turn_no": 1})
+        self.finish(first)
+        with mock.patch("plays.api.gemini.generate_scenario") as gen:
+            res = self.post("/api/plays/", {"retry": True})
+        gen.assert_not_called()  # お題は作り直さない
+        self.assertEqual(res.status_code, 201)
+        second = res.json()["play_id"]
+        self.assertNotEqual(second, first)
+        data = self.client.get(f"/api/plays/{second}/").json()
+        self.assertEqual(data["title"], SCENARIO["title"])
+        self.assertEqual(data["character"]["name"], SCENARIO["character_name"])
+        self.assertEqual((data["status"], data["turns_left"], data["messages"]), ("playing", 15, []))
+
+    def test_retry_keeps_expression_svgs(self):
+        session = self.client.session
+        from .guest_play import GUEST_SESSION_KEY, new_play
+        session[GUEST_SESSION_KEY] = new_play(SCENARIO, expressions={"normal": "<svg/>"})
+        session.save()
+        res = self.post("/api/plays/", {"retry": True})
+        play = self.client.session[GUEST_SESSION_KEY]
+        self.assertEqual(play["id"], res.json()["play_id"])
+        self.assertEqual(play["expressions"], {"normal": "<svg/>"})
+
+    def test_retry_without_session_generates_new_scenario(self):
+        with mock.patch("plays.api.gemini.generate_scenario", return_value=SCENARIO) as gen:
+            res = self.post("/api/plays/", {"retry": True})
+        gen.assert_called_once()
+        self.assertEqual(res.status_code, 201)
+
+    def test_result_page_button_sends_retry(self):
+        play_id = self.start_play()
+        self.finish(play_id)
+        res = self.client.get(f"/plays/{play_id}/result/")
+        self.assertContains(res, 'id="start-btn" data-retry', html=False)

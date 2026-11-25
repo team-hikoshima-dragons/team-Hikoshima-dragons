@@ -1,11 +1,13 @@
 from django.http import JsonResponse
+from django.shortcuts import render
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, TemplateView
 from django.contrib.auth.views import LoginView  as BaseLoginView, LogoutView as BaseLogoutView
 from .forms import SignUpForm, LoginForm 
-from .models import UserSetting
+from .models import UserSetting, User
 from django.contrib.auth.mixins import LoginRequiredMixin
-
+from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
 
 class SignUpView(CreateView):
     form_class = SignUpForm
@@ -42,3 +44,10 @@ class LogoutView(BaseLogoutView):
 class MypageView(LoginRequiredMixin,TemplateView):
     template_name = "accounts/mypage.html"
     login_url = reverse_lazy("accounts:login")
+
+# @method_decorator(login_required, name='dispatch')
+# class UserUpdateView(UpdateView):
+#     model = User
+#     fields = ('first_name', 'last_name', 'email')
+#     template_name = 'my_account.html'
+#     success_url = reverse_lazy('my_account')

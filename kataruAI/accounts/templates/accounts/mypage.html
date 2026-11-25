@@ -33,10 +33,10 @@
       <!-- No.1 プロフィールカード -->
       <section class="card card--ink">
         <div class="profile">
-          <span class="avatar avatar--l">K</span><!-- No.2 -->
+          <span class="avatar avatar--l">{{ user.username|slice:":1"|upper }}</span><!-- No.2 -->
           <div>
-            <h1 class="profile__name">Kさん</h1><!-- No.3 -->
-            <p class="profile__since">はじめたのは 2026/10/01</p><!-- No.4 -->
+            <h1 class="profile__name">{{ user.username }}</h1><!-- No.3 -->
+            <p class="profile__since">はじめたのは {{ user.create_at|date:"Y/m/d"}}</p><!-- No.4 -->
           </div>
           <div class="profile__stats">
             <p class="profile__stat"><span>クリア数</span><span>12</span></p><!-- No.5・6 -->
@@ -60,12 +60,12 @@
           <div class="form-grid">
             <div class="field">
               <label class="field__label" for="username">ユーザー名 <span class="req">必須</span></label><!-- No.16 -->
-              <input class="input" type="text" id="username" name="username" value="Kさん" maxlength="20"><!-- No.17 -->
+              <input class="input" type="text" id="username" name="username" value="{{ user.username }}" maxlength="20"><!-- No.17 -->
               <p class="field__note">ランキングに表示されます</p><!-- No.20 -->
             </div>
             <div class="field">
               <label class="field__label" for="email">メールアドレス <span class="req">必須</span></label><!-- No.18 -->
-              <input class="input" type="email" id="email" name="email" value="kataru@example.com" autocomplete="email"><!-- No.19 -->
+              <input class="input" type="email" id="email" name="email" value="{{ user.email }}" autocomplete="email"><!-- No.19 -->
               <p class="field__note">変えるときは「今のパスワード」も入力してね</p>
             </div>
           </div>

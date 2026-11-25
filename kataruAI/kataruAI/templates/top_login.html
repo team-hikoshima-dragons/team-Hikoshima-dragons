@@ -24,7 +24,7 @@
   </nav>
   <div class="header__right">
     <a href="{% url 'accounts:mypage' %}" class="gnav__item">
-      <span class="avatar">K</span><span class="gnav__label">マイページ</span>
+      <span class="avatar">{{ user.username|slice:":1"|upper }}</span><span class="gnav__label">マイページ</span>
     </a>
     <button type="button" class="btn btn--s" data-open="overlay-logout">ログアウト</button>
   </div>
@@ -38,7 +38,7 @@
         <section class="card card--ink play-card">
           <img class="play-card__mascot" src="../static/img/katarun.svg" alt="カタルン" width="150" height="140"><!-- No.13 -->
           <form class="play-card__body" onsubmit="return false">
-            <p class="play-card__hello">おかえり、Kさん</p><!-- No.6 -->
+            <p class="play-card__hello">おかえり、{{ user.username }}さん</p><!-- No.6 -->
             <h2 class="play-card__title">ランダムなお題で遊ぶ</h2><!-- No.7 -->
 
             <!-- No.8〜10 難易度 -->

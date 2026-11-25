@@ -24,3 +24,4 @@ class LoginForm(AuthenticationForm):
         # AuthenticationForm本来の clean() が self.cleaned_data['username'] を参照するため値を移す
         self.cleaned_data["username"] = self.cleaned_data.get("email")
         return super().clean()
+

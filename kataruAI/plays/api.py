@@ -1,4 +1,4 @@
-"""プレイ画面用API（ゲスト用）。URL は plays/api_urls.py、マウント先は /api/plays/
+"""プレイ画面用API（ゲスト・会員）。URL は plays/api_urls.py、マウント先は /api/plays/
 
 POST /api/plays/              プレイ開始（お題を生成）
 GET  /api/plays/{id}/         状態取得・再開
@@ -10,8 +10,8 @@ POST /api/plays/{id}/abort/   中断
 - @csrf_exempt は使わない。React / JS は X-CSRFToken ヘッダーで送る。
 - エラーは {"error": {"code": "...", "message": "..."}} の形で返す。
 - 機嫌・疑い・理解度の数値はレスポンスに含めない。
-- Gemini はトランザクションの外で呼ぶ（ゲストはDBを使わないので問題なし）。
-- 会員のプレイ（DB保存）はこのファイルでは未対応。
+- Gemini はトランザクションの外で呼ぶ。
+- ゲストはセッション（guest_play.py）、会員はDB（member_play.py）で処理する。
 """
 import functools
 import json
@@ -20,7 +20,7 @@ from django.http import JsonResponse
 from django.utils import timezone
 from django.views.decorators.http import require_GET, require_POST
 
-from . import gemini, guest_play
+from . import gemini, guest_play, member_play
 from .guest_play import GUEST_DIFFICULTY, GUEST_SESSION_KEY, PlayError
 
 
@@ -32,14 +32,11 @@ def _error_response(error):
 
 
 def _api(view):
-    """ビューの共通処理：PlayError をエラーレスポンスに変換する。会員は未対応として止める。"""
+    """ビューの共通処理：PlayError をエラーレスポンスに変換する。"""
 
     @functools.wraps(view)
     def wrapper(request, *args, **kwargs):
         try:
-            # TODO: 会員のプレイ（DB保存・履歴・ランキング）を作るときに、ここを分岐に変える
-            if request.user.is_authenticated:
-                raise PlayError("NOT_IMPLEMENTED", "会員のプレイはまだ対応していません。", 501)
             return view(request, *args, **kwargs)
         except PlayError as e:
             return _error_response(e)
@@ -66,12 +63,23 @@ def _save(request, play):
 @require_POST
 @_api
 def start(request):
-    """プレイ開始：お題を生成し、ゲスト用のプレイを作る。
+    """プレイ開始。
 
-    ゲストの難易度は初級固定なので、リクエストの difficulty は使わない（設計書 ①-a）。
-    生成に成功してから、前のプレイを置き換える（設計書 ②-a：失敗時は前のプレイを残す）。
+    会員：body の scenario_id があればそのシナリオで（お題は生成しない）、
+          なければ body の difficulty でランダムなお題を生成して開始する。
+    ゲスト：難易度は初級固定なので、リクエストの difficulty は使わない（設計書 ①-a）。
+    どちらも生成に成功してから、前のプレイを置き換える（設計書 ②-a：失敗時は前のプレイを残す）。
     """
-    _json_body(request)  # 形だけ確認する
+    data = _json_body(request)
+    if request.user.is_authenticated:
+        if data.get("scenario_id") is not None:
+            play = member_play.start_with_scenario(request.user, data["scenario_id"])
+        else:
+            play = member_play.start_random(
+                request.user, data.get("difficulty"), gemini.generate_scenario
+            )
+        return JsonResponse(member_play.start_payload(play), status=201)
+
     try:
         scenario = gemini.generate_scenario(GUEST_DIFFICULTY)
     except gemini.GeminiError:
@@ -89,6 +97,8 @@ def start(request):
 @_api
 def detail(request, play_id):
     """状態取得：リロード時や再開時に、画面を復元するための情報を返す。"""
+    if request.user.is_authenticated:
+        return JsonResponse(member_play.public_view(member_play.find_play(request.user, play_id)))
     play = guest_play.find_play(request.session, play_id)
     return JsonResponse(guest_play.public_view(play))
 
@@ -97,8 +107,12 @@ def detail(request, play_id):
 @_api
 def turn(request, play_id):
     """発言を処理して、キャラの返答と最新の様子を返す。"""
-    play = guest_play.find_play(request.session, play_id)
     data = _json_body(request)
+    if request.user.is_authenticated:
+        return JsonResponse(member_play.apply_turn(
+            request.user, play_id, data.get("text"), data.get("turn_no"), gemini.generate_reply
+        ))
+    play = guest_play.find_play(request.session, play_id)
     payload = guest_play.apply_turn(
         play, data.get("text"), data.get("turn_no"), gemini.generate_reply, now=timezone.now()
     )
@@ -110,6 +124,8 @@ def turn(request, play_id):
 @_api
 def give_up(request, play_id):
     """あきらめる：失敗（0点）にしてリザルトへ。"""
+    if request.user.is_authenticated:
+        return JsonResponse(member_play.give_up(request.user, play_id))
     play = guest_play.find_play(request.session, play_id)
     payload = guest_play.give_up(play, now=timezone.now())
     _save(request, play)
@@ -120,6 +136,8 @@ def give_up(request, play_id):
 @_api
 def abort(request, play_id):
     """中断：プレイを中断にして、トップへ戻す。"""
+    if request.user.is_authenticated:
+        return JsonResponse(member_play.abort(request.user, play_id))
     play = guest_play.find_play(request.session, play_id)
     payload = guest_play.abort(play)
     _save(request, play)

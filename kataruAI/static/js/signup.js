@@ -13,7 +13,6 @@
   const tplUser = document.getElementById("tpl-user");
 
   const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  const TAKEN = ["taken@example.com"]; // モック用。本番はサーバーで判定
 
   // 各ステップの設定
   const steps = [
@@ -29,7 +28,7 @@
       validate: function (v) {
         if (!v) return "メールアドレスを入力してね。";
         if (!EMAIL_RE.test(v)) return "メールアドレスの形がちがうみたい。";
-        if (TAKEN.indexOf(v) !== -1) return "そのメールアドレスはもう登録されてるよ。";
+        // 登録済みかどうかはサーバーで判定する（最後の送信でエラーが返る）
         return "";
       },
       display: function (v) { return v; }
@@ -115,7 +114,9 @@
       .then(function (res) {
         return res.json().then(function (data) {
           if (!res.ok || !data.ok) {
-            throw new Error(data.error || "登録に失敗しました。入力内容を確認してね。");
+            const err = new Error(data.error || "登録に失敗しました。入力内容を確認してね。");
+            err.field = data.field;
+            throw err;
           }
           return data;
         });
@@ -129,6 +130,13 @@
       .catch(function (err) {
         sendBtn.disabled = false;
         addBubble(tplBot, err.message, true);
+        // サーバーで見つかったエラー（登録済みのメールなど）は、そのステップからやり直す
+        const back = inputs.findIndex(function (input) { return input.name === err.field; });
+        if (back !== -1) {
+          current = back;
+          inputs[back].classList.add("is-error");
+          showStep(back);
+        }
       });
   });
 

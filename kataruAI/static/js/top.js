@@ -15,9 +15,13 @@
     return found ? decodeURIComponent(found.slice(prefix.length)) : "";
   }
 
-  function showError() {
+  const errorText = document.getElementById("gen-error-text");
+
+  function showError(message) {
     loading.hidden = true;
     startBtn.disabled = false;
+    // サーバーからメッセージが返ってきたら、それを表示する（例：シナリオが削除されていた）
+    if (errorText && typeof message === "string" && message) errorText.textContent = message;
     if (error) error.hidden = false;
   }
 
@@ -26,9 +30,12 @@
     loading.hidden = false;
     startBtn.disabled = true; // 生成中はプレイボタンを無効化（No.22）
 
-    // 難易度の選択がある画面ならそれを送る（ゲストはサーバー側で初級固定）
+    // 会員の「もう一度挑戦する」（リザルト）は同じシナリオで始める（イベント22）
+    // それ以外は、難易度の選択がある画面ならそれを送る（ゲストはサーバー側で初級固定）
     const checked = document.querySelector('input[name="difficulty"]:checked');
-    const body = checked ? { difficulty: checked.value } : {};
+    const scenarioId = startBtn.dataset.scenarioId;
+    const body = scenarioId ? { scenario_id: Number(scenarioId) }
+      : checked ? { difficulty: checked.value } : {};
 
     fetch("/api/plays/", {
       method: "POST",
@@ -42,11 +49,11 @@
           if (res.ok && data && data.play_url) {
             location.href = data.play_url; // 成功：プレイ画面へ
           } else {
-            showError();
+            showError(data && data.error && data.error.message);
           }
         });
       })
-      .catch(showError); // 通信そのものの失敗（タイムアウトなど）
+      .catch(function () { showError(); }); // 通信そのものの失敗（タイムアウトなど）
   }
 
   if (startBtn) startBtn.addEventListener("click", startGame);

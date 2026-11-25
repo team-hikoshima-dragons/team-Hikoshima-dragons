@@ -140,6 +140,11 @@ STATICFILES_DIRS = [
 
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+# ユーザーがアップロードするキャラクター画像（シナリオ作成）。開発中は Django が配信する（config/urls.py）。
+# 本番は nginx で /media/ を配信する設定が必要（Phase 6 で確認）
+MEDIA_URL = 'media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
 # Email
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
 

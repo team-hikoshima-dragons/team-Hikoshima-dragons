@@ -85,6 +85,13 @@ class ScoreTest(TestCase):
         s = State(80, 20, 80, turns_used=4)
         self.assertEqual(calculate_score(s, get_rules("advanced")), 952)
 
+    def test_score_examples_in_test_spec(self):
+        """ユースケース記述テスト仕様書 07「スコア計算」の2例"""
+        beginner = State(80, 20, 75, turns_used=5)   # 残り10ターン
+        self.assertEqual(calculate_score(beginner, get_rules("beginner")), 490)
+        advanced = State(85, 10, 90, turns_used=5)   # 残り5ターン
+        self.assertEqual(calculate_score(advanced, get_rules("advanced")), 956)
+
     def test_score_max_is_1340(self):
         """上級で全パラメータが満点・ターンを使い切っていない場合の最大値は1340"""
         self.assertEqual(calculate_score(State(100, 0, 100, 0), get_rules("advanced")), 1340)

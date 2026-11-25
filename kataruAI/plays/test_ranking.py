@@ -26,13 +26,20 @@ class AggregateTest(TestCase):
         self.c = User.objects.create_user("c@example.com", "abcd1234", username="う")
 
     def test_total_and_clears_and_ties(self):
+        """同点ならクリア数の多いほうが上（テスト仕様書 08「同点の並び」）。順位は通し番号"""
         clear(self.a, 300)
         clear(self.a, 300)
         clear(self.b, 600)
         clear(self.c, 100)
         rows = ranking.aggregate()
         self.assertEqual([(r["username"], r["clears"], r["total"], r["rank"]) for r in rows],
-                         [("あ", 2, 600, 1), ("い", 1, 600, 1), ("う", 1, 100, 3)])
+                         [("あ", 2, 600, 1), ("い", 1, 600, 2), ("う", 1, 100, 3)])
+
+    def test_same_total_and_clears_first_to_reach_is_higher(self):
+        """合計もクリア数も同じなら、先にその合計に達したユーザーが上"""
+        clear(self.b, 500, days_ago=1)  # い が先に到達
+        clear(self.a, 500, days_ago=0)
+        self.assertEqual([r["username"] for r in ranking.aggregate()], ["い", "あ"])
 
     def test_only_random_clears_of_active_users(self):
         clear(self.a, 500, kind="user")
@@ -82,7 +89,7 @@ class RankingPageTest(TestCase):
 
     def test_empty(self):
         self.assertContains(self.client.get("/rankings/?period=today&difficulty=advanced"),
-                            "この期間のランキングデータはまだありません")
+                            "データがまだありません")
 
     def test_invalid_params_fall_back(self):
         res = self.client.get("/rankings/?period=xx&difficulty=yy")

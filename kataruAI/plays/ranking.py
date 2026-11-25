@@ -6,7 +6,7 @@
 from datetime import timedelta
 
 from django.contrib.auth.decorators import login_required
-from django.db.models import Count, Sum
+from django.db.models import Count, Max, Sum
 from django.shortcuts import render
 from django.urls import reverse_lazy
 from django.utils import timezone
@@ -34,7 +34,8 @@ def period_start(period, now=None):
 def aggregate(start=None, difficulty="all", end=None):
     """[{"user_id", "username", "clears", "total", "rank"}, ...] を合計の高い順で返す。
 
-    順位は同点なら同じ順位（1, 2, 2, 4 …）。並びは合計 → クリア数 → ユーザー名の順。
+    並び（ユースケース記述テスト仕様書 08「同点の並び」）：合計スコアの高い順 → クリア数の多い順
+    → 先にその合計に達したユーザー（期間内の最後のクリアが早い順）。順位はこの並びの通し番号。
     """
     plays = Play.objects.filter(
         status=game.CLEARED, scenario__kind=Scenario.Kind.RANDOM, user__is_active=True,
@@ -47,12 +48,12 @@ def aggregate(start=None, difficulty="all", end=None):
         plays = plays.filter(scenario__difficulty=difficulty)
     rows = list(
         plays.values("user_id", "user__username")
-        .annotate(clears=Count("pk"), total=Sum("score"))
-        .order_by("-total", "-clears", "user__username")
+        .annotate(clears=Count("pk"), total=Sum("score"), reached_at=Max("finished_at"))
+        .order_by("-total", "-clears", "reached_at", "user_id")
     )
     result = []
     for i, row in enumerate(rows):
-        rank = result[-1]["rank"] if result and result[-1]["total"] == row["total"] else i + 1
+        rank = i + 1
         result.append({
             "user_id": row["user_id"], "username": row["user__username"],
             "clears": row["clears"], "total": row["total"], "rank": rank,

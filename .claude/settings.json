@@ -8,7 +8,7 @@
       "Edit(./CLAUDE.md)",
       "Edit(./.claude/**)",
       "Edit(./.github/**)",
-      "Edit(./**/migrations/0*.py)",
+      "Edit(./**/migrations/0001_*.py)",
       "Bash(git push --force:*)",
       "Bash(git push -f:*)",
       "Bash(git push origin main:*)",
